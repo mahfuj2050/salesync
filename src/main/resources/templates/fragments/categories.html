@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout}" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <title>Products</title>
+  <!-- ✅ Local Bootstrap Icons -->
+  <link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet" />
+
+  <!-- ✅ Local SweetAlert2 -->
+  <script th:src="@{/js/sweetalert2.all.min.js}"></script>
+<!--   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
+ <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+
+<body>
+  <div layout:fragment="content" class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="fw-bold">Category List</h3>
+    <a href="/categories/new" class="btn btn-primary">+ Add New Category</a>
+    </div>
+
+
+		<div class="table-responsive shadow-sm rounded">
+		  <table class="table table-hover align-middle text-center">
+		    <thead class="table-dark">
+		      <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="category : ${categories}">
+                <td th:text="${category.id}"></td>
+                <td class="text-start" th:text="${category.name}"></td>
+                <td class="text-start" th:text="${category.description}"></td>
+                <td class="text-center">
+                    <a th:href="@{/categories/edit/{id}(id=${category.id})}" 
+                       class="btn btn-sm btn-warning">Edit</a>
+                    <a href="#" 
+                       th:data-id="${category.id}" 
+                       class="btn btn-sm btn-danger btn-delete">Delete</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- SweetAlert Scripts -->
+<script th:inline="javascript">
+    // Show success alert after redirect
+    let successMessage = [[${success}]];
+    if (successMessage) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: successMessage,
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
+
+    // Confirm before deleting
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const categoryId = this.getAttribute('data-id');
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This action cannot be undone!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/categories/delete/' + categoryId;
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

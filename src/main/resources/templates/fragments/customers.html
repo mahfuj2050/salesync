@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout}" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <title>Customers</title>
+  <!-- ✅ Local Bootstrap CSS -->
+  <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet" />
+  <link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet" />
+  <!-- ✅ Local Font Awesome (from /static/fontawesome) -->
+  <link th:href="@{/fontawesome/css/fontawesome.css}" rel="stylesheet" />
+  <link th:href="@{/fontawesome/css/brands.css}" rel="stylesheet" />
+  <link th:href="@{/fontawesome/css/solid.css}" rel="stylesheet" />
+  <!-- OR use all.css if you want everything in one -->
+  <!-- <link th:href="@{/fontawesome/css/all.css}" rel="stylesheet" /> -->
+
+  <!-- ✅ Local jQuery -->
+  <script th:src="@{/js/jquery-3.6.0.min.js}"></script>
+
+  <!-- ✅ Local Bootstrap Bundle JS (includes Popper) -->
+  <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+ <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+
+<body>
+  <div layout:fragment="content" class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="fw-bold">Customers</h3>
+      <a sec:authorize="hasRole('ADMIN')" th:href="@{/customer}" class="btn btn-dark">
+        <i class="bi bi-plus-lg"></i> Add Customer
+      </a>
+    </div>
+
+    <!-- Search filter -->
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search by name or phone...">
+      </div>
+    </div>
+
+    <!-- Responsive Table -->
+    <div class="table-responsive shadow-sm rounded">
+      <table class="table table-hover align-middle text-center">
+        <thead class="table-dark">
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Address</th>
+            <th scope="col">Phone Number</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="customerTable">
+          <tr th:each="customer : ${customer_page.content}">
+            <td class="text-start" th:text="${customer.name}"></td>
+            <td class="text-start" th:text="${customer.address}"></td>
+            <td th:text="${customer.phoneNumber}"></td>
+            <td>
+              <a th:href="@{/customer/{id}(id=${customer.id})}" class="btn btn-sm btn-primary me-1">
+                <i class="bi bi-pencil"></i> Edit
+              </a>
+              <button type="button" th:attr="data-id=${customer.id}" class="btn btn-sm btn-danger"
+                data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal">
+                <i class="bi bi-trash"></i> Delete
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <nav th:if="${customer_page.totalPages > 1}" class="d-flex justify-content-center mt-3">
+      <ul class="pagination pagination-sm">
+        <li class="page-item" th:each="i: ${#numbers.sequence(1, customer_page.totalPages)}"
+          th:classappend="${i - 1 == customer_page.number} ? 'active'">
+          <a class="page-link" th:href="@{/customers(size=${customer_page.size}, page=${i})}" th:text="${i}"></a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModal"
+      aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <form th:action="@{/customers/delete}" method="post">
+          <input type="hidden" name="id" value="">
+          <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+              <h5 class="modal-title">Confirm Delete</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              Are you sure you want to delete this customer? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- JS for search + delete modal -->
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Delete modal
+        const deleteModal = document.getElementById("deleteConfirmationModal");
+        deleteModal.addEventListener("show.bs.modal", function (event) {
+          const button = event.relatedTarget;
+          const itemId = button.getAttribute("data-id");
+          this.querySelector("input[name='id']").value = itemId;
+        });
+
+        // Search filter
+        const searchInput = document.getElementById("searchInput");
+        const tableRows = document.querySelectorAll("#customerTable tr");
+
+        searchInput.addEventListener("keyup", () => {
+          const searchText = searchInput.value.toLowerCase();
+          tableRows.forEach(row => {
+            const name = row.cells[0].textContent.toLowerCase();
+            const phone = row.cells[2].textContent.toLowerCase();
+            row.style.display = name.includes(searchText) || phone.includes(searchText) ? "" : "none";
+          });
+        });
+      });
+    </script>
+
+  </div>
+</body>
+</html>

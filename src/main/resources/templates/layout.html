@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet" />
+
+  <!-- Font Awesome (Local v7.1.0) -->
+  <link th:href="@{/fontawesome/css/fontawesome.css}" rel="stylesheet" />
+  <link th:href="@{/fontawesome/css/brands.css}" rel="stylesheet" />
+  <link th:href="@{/fontawesome/css/solid.css}" rel="stylesheet" />
+
+  <!-- Custom Styles -->
+  <link th:href="@{/css/styles.css}" rel="stylesheet" />
+
+  <!-- jQuery -->
+  <script th:src="@{/js/jquery-3.6.0.min.js}"></script>
+
+  <!-- Bootstrap Bundle -->
+  <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+
+  <title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE">Sales & Inventory Management System</title>
+
+  <style>
+    body {
+      font-family: "Segoe UI", Roboto, sans-serif;
+      background-color: #f9fafb;
+    }
+
+    header.navbar {
+      background: linear-gradient(90deg, #0d6efd, #0a58ca);
+    }
+
+    #sidebarMenu {
+      min-height: 100vh;
+      border-right: 1px solid #dee2e6;
+      transition: all 0.3s ease-in-out;
+    }
+
+    #sidebarMenu .nav-link {
+      font-weight: 500;
+      color: #333;
+      border-radius: .375rem;
+      margin: 3px 0;
+      padding: 10px 15px;
+      transition: all 0.2s ease;
+    }
+
+    #sidebarMenu .nav-link:hover,
+    #sidebarMenu .nav-link.active {
+      background: #0d6efd;
+      color: #fff;
+    }
+
+    .btn-toggle {
+      font-weight: 600;
+      color: #495057;
+    }
+
+    .btn-toggle:hover {
+      color: #0d6efd;
+    }
+
+    footer {
+      background: #212529;
+      color: #adb5bd;
+      font-size: 0.875rem;
+    }
+
+    footer a {
+      color: #0d6efd;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body class="d-flex flex-column h-100">
+  <!-- Header -->
+  <header class="navbar navbar-light sticky-top flex-md-nowrap p-2 bg-dark">
+    <a class="navbar-brand px-3 fs-5 fw-bold text-white" th:href="@{/}">
+      <i class="fas fa-cubes me-2"></i> Mubin Enterprise
+    </a>
+
+    <!-- User Profile Dropdown -->
+    <div class="ms-auto me-3">
+      <div class="dropdown">
+        <a class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" href="#"
+          id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-user-circle fs-4 me-2"></i>
+          <span th:text="${#authentication.name}">Username</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+          <li><a class="dropdown-item" th:href="@{/account}"><i class="fas fa-user me-2"></i> Profile</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" th:href="@{/logout}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <nav id="sidebarMenu" class="col-md-2 col-lg-2 d-md-block bg-light sidebar collapse">
+        <div class="position-sticky pt-3">
+          <ul class="nav flex-column">
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/')}" class="nav-link" th:href="@{/}">
+                <i class="fas fa-home me-2"></i> Home
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/orders')}" class="nav-link" th:href="@{/orders}">
+                <i class="fas fa-shopping-cart me-2"></i> Orders
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/pos')}" class="nav-link" th:href="@{/pos}">
+                <i class="fas fa-cash-register me-2"></i> POS
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/purchase')}" class="nav-link" th:href="@{/purchase/new}">
+                <i class="fas fa-file-invoice-dollar me-2"></i> Purchase
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/payments')}" class="nav-link" th:href="@{/payments}">
+                <i class="fas fa-money-bill-wave me-2"></i> Payment
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/products')}" class="nav-link" th:href="@{/products}">
+                <i class="fas fa-box-open me-2"></i> Products
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/categories')}" class="nav-link" th:href="@{/categories}">
+                <i class="fas fa-layer-group me-2"></i> Categories
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/brands')}" class="nav-link" th:href="@{/brands}">
+                <i class="fas fa-tags me-2"></i> Brands
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/customers')}" class="nav-link" th:href="@{/customers}">
+                <i class="fas fa-users me-2"></i> Customers
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/suppliers')}" class="nav-link" th:href="@{/suppliers}">
+                <i class="fas fa-truck me-2"></i> Suppliers
+              </a>
+            </li>
+
+            <div sec:authorize="hasRole('ADMIN')">
+              <li>
+                <a th:classappend="${@requestUtil.currentUri('/users')}" class="nav-link" th:href="@{/users}">
+                  <i class="fas fa-user-shield me-2"></i> Users
+                </a>
+              </li>
+              <li>
+                <a th:classappend="${@requestUtil.currentUri('/reports')}" class="nav-link" th:href="@{/reports}">
+                  <i class="fas fa-chart-line me-2"></i> Reports
+                </a>
+              </li>
+            </div>
+
+            <li class="border-top my-3"></li>
+
+            <li class="mb-1">
+              <button class="btn btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse"
+                data-bs-target="#account-collapse" aria-expanded="false">
+                <i class="fas fa-user-circle me-2"></i> Account
+              </button>
+              <div class="collapse" id="account-collapse">
+                <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-3">
+                  <li><a class="nav-link link-dark rounded" th:href="@{/account}"> Profile </a></li>
+                  <li><a class="nav-link link-dark rounded" th:href="@{/logout}"> Sign out </a></li>
+                </ul>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- Main -->
+      <main class="col-md-10 ms-sm-auto col-lg-10 px-md-4 py-4">
+        <div class="bg-white shadow-sm rounded p-4">
+          <div layout:fragment="content"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-auto text-center py-3">
+    <div>
+      © 2025 <a href="#">Inventory Management System</a> | Built with <i class="fas fa-heart text-danger"></i>
+    </div>
+  </footer>
+
+  <!-- Child page scripts -->
+  <th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

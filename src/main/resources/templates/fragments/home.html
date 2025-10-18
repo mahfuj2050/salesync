@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout}">
+<head>
+<title>Home</title>
+</head>
+<body>
+	<div layout:fragment="content">
+		<div class="row gap-2 px-4 pb-4">
+			<div class="col-md">
+				<div class="card text-white bg-dark">
+					<div class="card-header text-center fs-4">Product Count</div>
+					<div class="card-body">
+						<p class="text-center fs-2" th:text="${product_count}"></p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md">
+				<div class="card text-white bg-dark">
+					<div class="card-header text-center fs-4">Customer Count</div>
+					<div class="card-body">
+						<p class="text-center fs-2" th:text="${customer_count}"></p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md">
+				<div class="card text-white bg-dark">
+					<div class="card-header text-center fs-4">Order Count</div>
+					<div class="card-body">
+						<p class="text-center fs-2" th:text="${order_count}"></p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Sales Summary Row -->
+		<div class="row gap-2 px-4 pb-4 mt-3">
+		    <div class="col-md">
+		        <div class="card text-white bg-primary">
+		            <div class="card-header text-center fs-4">Total Sale Today</div>
+		            <div class="card-body">
+		                <p class="text-center fs-2" th:text="${sales_today}"></p>
+		            </div>
+		        </div>
+		    </div>
+		    <div class="col-md">
+		        <div class="card text-white bg-success">
+		            <div class="card-header text-center fs-4">Total Sale This Week</div>
+		            <div class="card-body">
+		                <p class="text-center fs-2" th:text="${sales_week}"></p>
+		            </div>
+		        </div>
+		    </div>
+		    <div class="col-md">
+		        <div class="card text-white bg-warning">
+		            <div class="card-header text-center fs-4">Total Sale This Month</div>
+		            <div class="card-body">
+		                <p class="text-center fs-2" th:text="${sales_month}"></p>
+		            </div>
+		        </div>
+		    </div>
+		</div>
+		
+		<div sec:authorize="hasRole('ADMIN')" class="row gap-2 px-4">
+			<div class="col-md">
+				<div class="card text-white bg-dark">
+					<div class="card-body text-center fs-4">
+						<a th:href="@{/product}" class="btn btn-dark mb-3"><i
+                            class="fas fa-plus"></i> Add a new product</a>
+					</div>
+				</div>
+			</div>
+			<div class="col-md">
+                <div class="card text-white bg-dark">
+                    <div class="card-body text-center fs-4">
+                        <a th:href="@{/customer}" class="btn btn-dark mb-3"><i
+                            class="fas fa-plus"></i> Add a new customer</a>
+                    </div>
+                </div>
+            </div>
+			<div class="col-md">
+                <div class="card text-white bg-dark">
+                    <div class="card-body text-center fs-4">
+                        <a th:href="@{/order}" class="btn btn-dark mb-3"><i
+                            class="fas fa-plus"></i> Add a new order</a>
+                    </div>
+                </div>
+            </div>
+		</div>
+	</div>
+</body>
+</html>

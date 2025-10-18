@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${brand.id != null} ? 'Edit Brand' : 'Add New Brand'">Add New Brand</title>
+    <!-- ✅ Local Bootstrap Icons -->
+    <link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet" />
+    
+    <!-- ✅ Local SweetAlert2 -->
+    <script th:src="@{/js/sweetalert2.all.min.js}"></script>
+    <style>
+        body {
+            background: #f5f6fa;
+            font-family: "Segoe UI", sans-serif;
+        }
+        .liger-form {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            max-width: 800px;
+            margin: 17px auto;
+        }
+        .form-section {
+            margin-bottom: 25px;
+            border: 1px solid #d0d0d0;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .form-section legend {
+            font-weight: bold;
+            font-size: 16px;
+            padding: 8px 15px;
+            background: #e9ecef;
+            border-bottom: 1px solid #d0d0d0;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            padding: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 7px;
+            border: 1px solid #bbb;
+            border-radius: 4px;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-footer {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-primary {
+            background: #4e73df;
+            color: #fff;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+            margin-right: 10px;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 5px;
+        }
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+    </style>
+</head>
+<body>
+
+<div layout:fragment="content" class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-4 text-center" th:text="${brand.id != null} ? 'Edit Brand' : 'Add New Brand'"></h2>
+      <a sec:authorize="hasRole('ROLE_ADMIN')" th:href="@{/brands}" class="btn btn-primary">
+        <i class="fa-solid fa-list"></i> Brand List
+      </a>
+    </div>
+    
+    <h2 class="mb-4 text-center" 
+        th:text="${brand.id != null} ? 'Edit Brand' : 'Add New Brand'"></h2>
+        
+    <div class="liger-form">
+        <form id="brandForm" th:action="@{/brands/save}" th:object="${brand}" method="post">
+
+            <!-- Basic Information Section -->
+            <fieldset class="form-section">
+                <legend>Brand Information</legend>
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label class="form-label">Brand Name *</label>
+                        <input type="text" class="form-control" th:field="*{name}" th:errorclass="is-invalid" 
+                               placeholder="Enter brand name" required>
+                        <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="error-message"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" th:field="*{description}" th:errorclass="is-invalid" 
+                                  placeholder="Enter brand description..."></textarea>
+                        <div th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="error-message"></div>
+                    </div>
+
+                </div>
+            </fieldset>
+
+            <!-- Footer -->
+            <div class="form-footer">
+                <input type="hidden" th:field="*{id}">
+                <a th:href="@{/brands}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-save"></i> 
+                    <span th:text="${brand.id != null} ? 'Update Brand' : 'Save Brand'">Save Brand</span>
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('brandForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    Swal.fire({
+        title: 'Saving...',
+        text: 'Please wait a moment',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+
+    // Submit the form after short delay to show alert
+    setTimeout(() => this.submit(), 800);
+});
+</script>
+
+</body>
+</html>

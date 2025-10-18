@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Expenses List</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Expenses List</h2>
+    <a th:href="@{/expenses/new}" class="btn btn-success mb-3">Add New Expense</a>
+    <table class="table table-bordered table-striped">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Vendor</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Payment Method</th>
+            <th>Reference No.</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="expense : ${expenses}">
+            <td th:text="${expense.id}"></td>
+            <td th:text="${expense.expenseDate}"></td>
+            <td th:text="${expense.category}"></td>
+            <td th:text="${expense.vendorName}"></td>
+            <td th:text="${expense.description}"></td>
+            <td th:text="${expense.amount}"></td>
+            <td th:text="${expense.paymentMethod}"></td>
+            <td th:text="${expense.referenceNo}"></td>
+            <td>
+                <a th:href="@{/expenses/edit/{id}(id=${expense.id})}" class="btn btn-sm btn-primary">Edit</a>
+                <a th:href="@{/expenses/delete/{id}(id=${expense.id})}" class="btn btn-sm btn-danger"
+                   onclick="return confirm('Are you sure?')">Delete</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

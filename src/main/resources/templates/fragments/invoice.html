@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receipt #[[${order.invoiceNumber}]]</title>
+  <style>
+    body {
+      font-family: monospace;
+      width: 300px;
+      margin: auto;
+      background: #fff;
+      padding: 5px;
+      color: #333;
+    }
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .bold { font-weight: bold; }
+    hr { border: none; border-top: 1px dashed #000; margin: 5px 0; }
+
+    .header-area {
+      font-size: 1.8em;
+      font-weight: 900;
+      color: #C0392B;
+    }
+
+    .transaction-info { font-size: 14px; margin-bottom: 10px; }
+    .item-row { display: flex; justify-content: space-between; font-size: 14px; }
+    .line-item-list { margin: 10px 0; }
+    .summary-row { display: flex; justify-content: space-between; font-size: 14px; }
+    .total-amount { font-size: 16px; font-weight: bold; margin: 5px 0; }
+
+    .footer { font-size: 12px; margin-top: 15px; }
+
+    .no-print { display: block; margin: 10px auto; padding: 5px 10px; cursor: pointer; }
+
+    @media print {
+      body { width: 80mm; }
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ✅ Shop Name -->
+  <div class="center logo-container">
+    <div class="header-area">Mubin Enterprise</div>
+  </div>
+
+  <hr>
+
+  <!-- ✅ Transaction Details -->
+  <div class="transaction-info">
+    <div class="summary-row">
+      <span>Transaction Ref:</span>
+      <span th:text="${order.invoiceNumber}">1759123971600-13-2841</span>
+    </div>
+    <div class="summary-row">
+      <span>Sale Time:</span>
+      <span th:text="${#temporals.format(order.dateOrdered, 'dd/MM/yy HH:mm:ss')}">29/09/25 11:32:51</span>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ✅ Line Items -->
+  <div class="line-item-list">
+    <div class="item-row bold">
+      <span>Item</span>
+      <span>Total</span>
+    </div>
+    <hr>
+    <div class="item-row" th:each="d : ${order.orderDetails}">
+      <div>
+        <span th:text="${d.quantity}">2</span> x 
+        <span th:text="${d.product.name}">Apple</span>
+        <span th:text="'(' + ${#numbers.formatDecimal(d.unitPrice, 2, 2)} + ')'">(0.99)</span>
+      </div>
+      <div th:text="${#numbers.formatDecimal(d.unitPrice * d.quantity, 2, 2)}">$1.98</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ✅ Summary -->
+  <div class="summary-row">
+    <span class="bold">Subtotal:</span>
+    <span class="bold" th:text="${#numbers.formatDecimal(order.totalAmount, 2, 2)}">$7.26</span>
+  </div>
+
+  <div class="summary-row" th:if="${order.discount != null and order.discount > 0}">
+    <span>Discount:</span>
+    <span th:text="'-' + ${#numbers.formatDecimal(order.discount, 2, 2)}">$0.50</span>
+  </div>
+
+  <div class="summary-row total-amount">
+    <span>After Discount:</span>
+    <span th:text="${#numbers.formatDecimal(order.grandTotal, 2, 2)}">$6.76</span>
+  </div>
+
+  <hr>
+
+  <!-- ✅ Payment Breakdown -->
+  <div class="transaction-info right">
+    <div class="summary-row">
+      <span>Amount Paid:</span>
+      <span th:text="${#numbers.formatDecimal(order.amountPaid, 2, 2)}">$6.76</span>
+    </div>
+    <div class="summary-row">
+      <span>Amount Due:</span>
+      <span th:text="${#numbers.formatDecimal(order.amountDue, 2, 2)}">$0.00</span>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ✅ Footer -->
+  <div class="footer center">
+    <p>Thanks for shopping with us!</p>
+    <div class="invoice-qr text-center mt-3">
+      <p>Invoice Number: <strong th:text="${invoiceNumber}"></strong></p>
+      <img th:src="'data:image/png;base64,' + ${qrCode}" alt="Invoice QR Code"/>
+      <p th:text="${qrUrl}" class="small text-muted mt-1"></p> <!-- optional -->
+    </div>
+  </div>
+
+  <!-- ✅ Print Buttons -->
+  <button class="no-print" onclick="window.print()">🖨️ Print Receipt</button>
+  <button class="no-print" onclick="window.location.href='/pos'">🛒 New Sale</button>
+
+  <script>
+    window.onload = function() {
+      window.print();
+    };
+  </script>
+
+</body>
+</html>

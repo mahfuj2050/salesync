@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Add / Edit Category</title>
+      <!-- ✅ Local Bootstrap Icons -->
+	  <link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet" />
+	
+	  <!-- ✅ Local SweetAlert2 -->
+	  <script th:src="@{/js/sweetalert2.all.min.js}"></script>
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
+</head>
+<body class="bg-light">
+<div layout:fragment="content" class="container align-self-center">
+    <h2 class="mb-4 text-center" 
+        th:text="${category.id != null ? 'Edit Category' : 'Add New Category'}"></h2>
+
+    <form id="categoryForm" th:action="@{/categories/save}" th:object="${category}" method="post">
+        <div class="mb-3">
+            <label class="form-label">Category Name</label>
+            <input type="text" class="form-control" th:field="*{name}" placeholder="Enter category name" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" th:field="*{description}" placeholder="Enter description"></textarea>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a href="/categories" class="btn btn-secondary">Back to List</a>
+            <button type="submit" class="btn btn-success">Save Category</button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('categoryForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    Swal.fire({
+        title: 'Saving...',
+        text: 'Please wait a moment',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+
+    // submit the form after short delay to show alert
+    setTimeout(() => this.submit(), 800);
+});
+</script>
+</body>
+</html>

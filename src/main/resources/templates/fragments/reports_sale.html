@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${reportTitle}">Sales Report</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <style>
+        .report-header {
+            background-color: #006b4d;
+            color: white;
+            padding: 20px;
+        }
+        .report-header h4 {
+            margin: 0;
+        }
+        .report-section-title {
+            background-color: #2c9c74;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        .summary-table td {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        .summary-table .highlight {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        table.report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table.report-table th {
+            background-color: #006b4d;
+            color: white;
+            padding: 8px;
+            text-align: left;
+        }
+        table.report-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        .total-row {
+            font-weight: bold;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+<div class="container my-3">
+
+    <!-- Header -->
+    <div class="report-header">
+        <h4>Mubin Enterprise</h4>
+        <p>25/A, Mirpur-1, Dhaka</p>
+        <p>+88 01717-708090</p>
+    </div>
+
+    <!-- Section Title -->
+    <div class="report-section-title" th:text="${reportTitle}">Daily Sales Report</div>
+
+    <!-- Summary -->
+    <table class="summary-table">
+        <tr>
+            <td><b>Total Quantity</b></td>
+            <td th:text="${totalQuantity}">0</td>
+        </tr>
+        <tr>
+            <td><b>Total Sales</b></td>
+            <td th:text="${#numbers.formatDecimal(totalSales,1,2)}">0.00</td>
+        </tr>
+        <tr>
+            <td class="highlight">Total Profit</td>
+            <td class="highlight" th:text="${#numbers.formatDecimal(totalProfit,1,2)}">0.00</td>
+        </tr>
+        <tr>
+            <td><b>Date</b></td>
+            <td th:text="${reportDate}">2024-01-18</td>
+        </tr>
+    </table>
+
+    <!-- Sales Table -->
+    <table class="report-table">
+        <thead>
+        <tr>
+            <th>SKU</th>
+            <th>Category</th>
+            <th>Product Sold</th>
+            <th>Quantity</th>
+            <th>Unit Price ($)</th>
+            <th>Total Sales ($)</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="d : ${orderDetails}">
+            <td th:text="${d.product.sku}">SKU001</td>
+            <td th:text="${d.product.category.name}">Electronics</td>
+            <td th:text="${d.product.name}">Product Name</td>
+            <td th:text="${d.quantity}">10</td>
+            <td th:text="${#numbers.formatDecimal(d.price,1,2)}">100.00</td>
+            <td th:text="${#numbers.formatDecimal(d.price * d.quantity,1,2)}">1000.00</td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="5" class="total-row">Total Amount</td>
+            <td th:text="${#numbers.formatDecimal(totalSales,1,2)}">0.00</td>
+        </tr>
+        </tfoot>
+    </table>
+
+</div>
+</body>
+</html>
