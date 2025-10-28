@@ -1,48 +1,754 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html layout:decorate="~{layout}" 
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
-    <title>Expense Form</title>
-    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <title>Add New Expense - POS System</title>
+    
+    <style>
+        .expense-form-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+        }
+        
+        .form-group {
+            flex: 1 0 300px;
+            padding: 0 10px;
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .form-control, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+            outline: none;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        .items-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .items-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+        
+        .items-table input, .items-table select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #3498db;
+            color: #3498db;
+        }
+        
+        .btn-outline:hover {
+            background: #3498db;
+            color: white;
+        }
+        
+        .remove-item {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .remove-item:hover {
+            background: #c82333;
+        }
+        
+        .amount-display {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+        
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+        
+        .invalid-feedback {
+            display: none;
+            width: 100%;
+            margin-top: 4px;
+            font-size: 12px;
+            color: #dc3545;
+        }
+        
+        .is-invalid ~ .invalid-feedback {
+            display: block;
+        }
+        
+        .financial-summary {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+        }
+        
+        .summary-row.total {
+            border-top: 2px solid #dee2e6;
+            font-weight: 600;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        
+        .required::after {
+            content: " *";
+            color: #dc3545;
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .form-check-input {
+            margin: 0;
+        }
+    </style>
 </head>
 <body>
-<div class="container mt-5">
-    <h2 th:text="${expense.id == null} ? 'Add Expense' : 'Edit Expense'"></h2>
-    <form th:action="@{/expenses/save}" th:object="${expense}" method="post">
-        <div class="mb-3">
-            <label>Date</label>
-            <input type="date" class="form-control" th:field="*{expenseDate}" required>
+   <div layout:fragment="content" class="container-fluid py-4">
+        <div class="expense-form-container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 th:text="${isEdit ? 'Edit Expense' : 'Add New Expense'}">Add New Expense</h1>
+                <a th:href="@{/expenses}" class="btn btn-secondary">Back to Expenses</a>
+            </div>
+
+            <form id="expenseForm" novalidate>
+                <!-- Basic Information Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Basic Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label required">Expense Date</label>
+                            <input type="date" class="form-control" id="expenseDate" name="expenseDate" 
+                                   th:value="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}" required>
+                            <div class="invalid-feedback">Please select expense date</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label required">Expense Category</label>
+                            <select class="form-select" id="expenseCategory" name="expenseCategory" required>
+                                <option value="">Select Category</option>
+                                <option th:each="category : ${categories}" 
+                                        th:value="${category}" 
+                                        th:text="${#strings.capitalizeWords(#strings.replace(category.name(), '_', ' '))}">
+                                </option>
+                            </select>
+                            <div class="invalid-feedback">Please select expense category</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Expense Type</label>
+                            <select class="form-select" id="expenseType" name="expenseType">
+                                <option value="">Select Type</option>
+                                <option th:each="type : ${expenseTypes}" 
+                                        th:value="${type}" 
+                                        th:text="${#strings.capitalizeWords(type.name())}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                      placeholder="Enter expense description"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vendor Information Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Vendor Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Vendor Name</label>
+                            <input type="text" class="form-control" id="vendorName" name="vendorName" 
+                                   placeholder="Enter vendor name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Vendor Contact</label>
+                            <input type="text" class="form-control" id="vendorContact" name="vendorContact" 
+                                   placeholder="Enter contact number">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Reference No</label>
+                            <input type="text" class="form-control" id="referenceNo" name="referenceNo" 
+                                   placeholder="Invoice/Bill number">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expense Items Section -->
+                <div class="form-section">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="section-title mb-0">Expense Items</h3>
+                        <button type="button" class="btn btn-outline" onclick="addNewItem()">
+                            + Add Item
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="items-table" id="itemsTable">
+                            <thead>
+                                <tr>
+                                    <th width="25%">Item Name</th>
+                                    <th width="15%">Description</th>
+                                    <th width="8%">Qty</th>
+                                    <th width="8%">Unit</th>
+                                    <th width="12%">Unit Price</th>
+                                    <th width="10%">Tax %</th>
+                                    <th width="12%">Amount</th>
+                                    <th width="10%">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsTableBody">
+                                <!-- Items will be added dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="financial-summary">
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotalDisplay">৳ 0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax Amount:</span>
+                            <span id="taxAmountDisplay">৳ 0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Discount:</span>
+                            <span id="discountDisplay">৳ 0.00</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total Amount:</span>
+                            <span id="totalAmountDisplay">৳ 0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Information Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Payment Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Payment Method</label>
+                            <select class="form-select" id="paymentMethod" name="paymentMethod">
+                                <option value="">Select Method</option>
+                                <option th:each="method : ${paymentMethods}" 
+                                        th:value="${method}" 
+                                        th:text="${method}">
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Amount Paid</label>
+                            <input type="number" class="form-control" id="amountPaid" name="amountPaid" 
+                                   step="0.01" min="0" value="0" onchange="calculateAmountDue()">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Amount Due</label>
+                            <input type="number" class="form-control" id="amountDue" name="amountDue" 
+                                   step="0.01" min="0" value="0" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Payment Date</label>
+                            <input type="date" class="form-control" id="paymentDate" name="paymentDate">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Due Date</label>
+                            <input type="date" class="form-control" id="dueDate" name="dueDate">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <select class="form-select" id="department" name="department">
+                                <option value="">Select Department</option>
+                                <option th:each="dept : ${departments}" 
+                                        th:value="${dept}" 
+                                        th:text="${dept}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Information Section -->
+                <div class="form-section">
+                    <h3 class="section-title">Additional Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Remarks</label>
+                            <textarea class="form-control" id="remarks" name="remarks" rows="2" 
+                                      placeholder="Additional remarks"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Internal Notes</label>
+                            <textarea class="form-control" id="internalNotes" name="internalNotes" rows="2" 
+                                      placeholder="Private notes (not visible to vendor)"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="isRecurring" name="isRecurring">
+                                <label class="form-check-label" for="isRecurring">This is a recurring expense</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" id="recurringFields" style="display: none;">
+                            <label class="form-label">Recurring Frequency</label>
+                            <select class="form-select" id="recurringFrequency" name="recurringFrequency">
+                                <option value="">Select Frequency</option>
+                                <option value="DAILY">Daily</option>
+                                <option value="WEEKLY">Weekly</option>
+                                <option value="MONTHLY">Monthly</option>
+                                <option value="QUARTERLY">Quarterly</option>
+                                <option value="YEARLY">Yearly</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/expenses'">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="saveExpense()">
+                        <span th:if="${isEdit}">Update Expense</span>
+                        <span th:unless="${isEdit}">Save Expense</span>
+                    </button>
+                </div>
+            </form>
         </div>
-        <div class="mb-3">
-            <label>Category</label>
-            <input type="text" class="form-control" th:field="*{category}" placeholder="Office, Travel, Utility" required>
-        </div>
-        <div class="mb-3">
-            <label>Description</label>
-            <textarea class="form-control" th:field="*{description}" rows="3"></textarea>
-        </div>
-        <div class="mb-3">
-            <label>Vendor Name</label>
-            <input type="text" class="form-control" th:field="*{vendorName}">
-        </div>
-        <div class="mb-3">
-            <label>Amount</label>
-            <input type="number" step="0.01" class="form-control" th:field="*{amount}" required>
-        </div>
-        <div class="mb-3">
-            <label>Payment Method</label>
-            <select class="form-control" th:field="*{paymentMethod}">
-                <option value="Cash">Cash</option>
-                <option value="Bank">Bank</option>
-                <option value="Credit Card">Credit Card</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label>Reference No.</label>
-            <input type="text" class="form-control" th:field="*{referenceNo}">
-        </div>
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a th:href="@{/expenses/list}" class="btn btn-secondary">Cancel</a>
-    </form>
-</div>
+
+        <script>
+            let itemCounter = 0;
+            
+            // Initialize form
+            document.addEventListener('DOMContentLoaded', function() {
+                addNewItem(); // Add first empty row
+                setupEventListeners();
+            });
+            
+            function setupEventListeners() {
+                // Recurring expense toggle
+                document.getElementById('isRecurring').addEventListener('change', function() {
+                    document.getElementById('recurringFields').style.display = 
+                        this.checked ? 'block' : 'none';
+                });
+                
+                // Real-time amount calculation
+                document.getElementById('amountPaid').addEventListener('input', calculateAmountDue);
+            }
+            
+            function addNewItem() {
+                const tbody = document.getElementById('itemsTableBody');
+                const row = document.createElement('tr');
+                row.id = `itemRow-${itemCounter}`;
+                
+                row.innerHTML = `
+                    <td>
+                        <input type="text" class="form-control item-name" name="expenseItems[${itemCounter}].itemName" 
+                               placeholder="Enter item name" required onchange="calculateItemAmount(${itemCounter})">
+                    </td>
+                    <td>
+                        <input type="text" class="form-control" name="expenseItems[${itemCounter}].description" 
+                               placeholder="Item description" onchange="calculateItemAmount(${itemCounter})">
+                    </td>
+                    <td>
+                        <input type="number" class="form-control quantity" name="expenseItems[${itemCounter}].quantity" 
+                               value="1" step="0.01" min="0.01" onchange="calculateItemAmount(${itemCounter})">
+                    </td>
+                    <td>
+                        <select class="form-select unit" name="expenseItems[${itemCounter}].unit" onchange="calculateItemAmount(${itemCounter})">
+                            <option value="">Unit</option>
+                            <option value="pcs">Pieces</option>
+                            <option value="kg">Kilogram</option>
+                            <option value="liters">Liters</option>
+                            <option value="hours">Hours</option>
+                            <option value="days">Days</option>
+                            <option value="months">Months</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control unit-price" name="expenseItems[${itemCounter}].unitPrice" 
+                               value="0" step="0.01" min="0" onchange="calculateItemAmount(${itemCounter})">
+                    </td>
+                    <td>
+                        <input type="number" class="form-control tax-percentage" name="expenseItems[${itemCounter}].taxPercentage" 
+                               value="0" step="0.01" min="0" max="100" onchange="calculateItemAmount(${itemCounter})">
+                    </td>
+                    <td>
+                        <span class="amount-display" id="itemAmount-${itemCounter}">৳ 0.00</span>
+                        <input type="hidden" class="item-amount" name="expenseItems[${itemCounter}].amount" value="0">
+                        <input type="hidden" class="item-tax-amount" name="expenseItems[${itemCounter}].taxAmount" value="0">
+                        <input type="hidden" class="item-total" name="expenseItems[${itemCounter}].total" value="0">
+                    </td>
+                    <td>
+                        <button type="button" class="remove-item" onclick="removeItem(${itemCounter})" 
+                                ${itemCounter === 0 ? 'disabled' : ''}>
+                            Remove
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+                itemCounter++;
+            }
+            
+            function removeItem(index) {
+                const row = document.getElementById(`itemRow-${index}`);
+                if (row) {
+                    row.remove();
+                    recalculateTotals();
+                }
+            }
+            
+            function calculateItemAmount(index) {
+                const row = document.getElementById(`itemRow-${index}`);
+                if (!row) return;
+                
+                const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+                const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
+                const taxPercentage = parseFloat(row.querySelector('.tax-percentage').value) || 0;
+                
+                // Calculate base amount
+                const amount = quantity * unitPrice;
+                
+                // Calculate tax amount
+                const taxAmount = amount * (taxPercentage / 100);
+                
+                // Calculate total
+                const total = amount + taxAmount;
+                
+                // Update displays
+                row.querySelector(`#itemAmount-${index}`).textContent = `৳ ${total.toFixed(2)}`;
+                row.querySelector('.item-amount').value = amount.toFixed(2);
+                row.querySelector('.item-tax-amount').value = taxAmount.toFixed(2);
+                row.querySelector('.item-total').value = total.toFixed(2);
+                
+                recalculateTotals();
+            }
+            
+            function recalculateTotals() {
+                let subtotal = 0;
+                let totalTax = 0;
+                let totalAmount = 0;
+                
+                // Sum up all items
+                for (let i = 0; i < itemCounter; i++) {
+                    const row = document.getElementById(`itemRow-${i}`);
+                    if (row) {
+                        const amount = parseFloat(row.querySelector('.item-amount').value) || 0;
+                        const taxAmount = parseFloat(row.querySelector('.item-tax-amount').value) || 0;
+                        const itemTotal = parseFloat(row.querySelector('.item-total').value) || 0;
+                        
+                        subtotal += amount;
+                        totalTax += taxAmount;
+                        totalAmount += itemTotal;
+                    }
+                }
+                
+                // Get discount
+                const discount = parseFloat(document.getElementById('discount').value) || 0;
+                totalAmount -= discount;
+                
+                // Update displays
+                document.getElementById('subtotalDisplay').textContent = `৳ ${subtotal.toFixed(2)}`;
+                document.getElementById('taxAmountDisplay').textContent = `৳ ${totalTax.toFixed(2)}`;
+                document.getElementById('discountDisplay').textContent = `৳ ${discount.toFixed(2)}`;
+                document.getElementById('totalAmountDisplay').textContent = `৳ ${totalAmount.toFixed(2)}`;
+                
+                // Update hidden fields
+                document.getElementById('subtotal').value = subtotal.toFixed(2);
+                document.getElementById('taxAmount').value = totalTax.toFixed(2);
+                document.getElementById('totalAmount').value = totalAmount.toFixed(2);
+                
+                calculateAmountDue();
+            }
+            
+            function calculateAmountDue() {
+                const totalAmount = parseFloat(document.getElementById('totalAmount').value) || 0;
+                const amountPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
+                const amountDue = totalAmount - amountPaid;
+                
+                document.getElementById('amountDue').value = amountDue.toFixed(2);
+            }
+            
+            function saveExpense() {
+                if (!validateForm()) {
+                    showAlert('Please fill all required fields correctly.', 'error');
+                    return;
+                }
+                
+                const formData = collectFormData();
+                
+                // Show loading state
+                const saveBtn = document.querySelector('.btn-success');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                saveBtn.disabled = true;
+                
+                fetch('/expenses/api/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('Expense created successfully!', 'success');
+                        setTimeout(() => {
+                            window.location.href = '/expenses';
+                        }, 1500);
+                    } else {
+                        throw new Error(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Error creating expense: ' + error.message, 'error');
+                })
+                .finally(() => {
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                });
+            }
+            
+            function validateForm() {
+                let isValid = true;
+                
+                // Reset validation
+                document.querySelectorAll('.is-invalid').forEach(el => {
+                    el.classList.remove('is-invalid');
+                });
+                
+                // Required fields validation
+                const requiredFields = [
+                    'expenseDate', 'expenseCategory'
+                ];
+                
+                requiredFields.forEach(field => {
+                    const element = document.getElementById(field);
+                    if (!element.value.trim()) {
+                        element.classList.add('is-invalid');
+                        isValid = false;
+                    }
+                });
+                
+                // Validate at least one item
+                const hasValidItems = document.querySelectorAll('.item-name[value]').length > 0;
+                if (!hasValidItems) {
+                    showAlert('Please add at least one expense item.', 'error');
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+            
+            function collectFormData() {
+                const formData = {
+                    expenseDate: document.getElementById('expenseDate').value,
+                    expenseCategory: document.getElementById('expenseCategory').value,
+                    expenseType: document.getElementById('expenseType').value,
+                    description: document.getElementById('description').value,
+                    vendorName: document.getElementById('vendorName').value,
+                    vendorContact: document.getElementById('vendorContact').value,
+                    referenceNo: document.getElementById('referenceNo').value,
+                    subtotal: document.getElementById('subtotalDisplay').textContent.replace('৳', '').trim(),
+                    taxAmount: document.getElementById('taxAmountDisplay').textContent.replace('৳', '').trim(),
+                    totalAmount: document.getElementById('totalAmountDisplay').textContent.replace('৳', '').trim(),
+                    amountPaid: document.getElementById('amountPaid').value || 0,
+                    amountDue: document.getElementById('amountDue').value || 0,
+                    paymentMethod: document.getElementById('paymentMethod').value,
+                    paymentDate: document.getElementById('paymentDate').value,
+                    dueDate: document.getElementById('dueDate').value,
+                    department: document.getElementById('department').value,
+                    remarks: document.getElementById('remarks').value,
+                    internalNotes: document.getElementById('internalNotes').value,
+                    isRecurring: document.getElementById('isRecurring').checked,
+                    recurringFrequency: document.getElementById('recurringFrequency').value,
+                    createdBy: 'admin' // This should come from session
+                };
+                
+                // Collect expense items
+                const expenseItems = [];
+                for (let i = 0; i < itemCounter; i++) {
+                    const row = document.getElementById(`itemRow-${i}`);
+                    if (row && row.querySelector('.item-name').value) {
+                        const item = {
+                            itemName: row.querySelector('.item-name').value,
+                            description: row.querySelector('input[name$=".description"]').value,
+                            quantity: row.querySelector('.quantity').value,
+                            unit: row.querySelector('.unit').value,
+                            unitPrice: row.querySelector('.unit-price').value,
+                            taxPercentage: row.querySelector('.tax-percentage').value,
+                            amount: row.querySelector('.item-amount').value,
+                            taxAmount: row.querySelector('.item-tax-amount').value,
+                            total: row.querySelector('.item-total').value
+                        };
+                        expenseItems.push(item);
+                    }
+                }
+                
+                formData.expenseItems = expenseItems;
+                return formData;
+            }
+            
+            function showAlert(message, type) {
+                // You can integrate with your existing alert system
+                alert(message); // Replace with toast notification
+            }
+        </script>
+    </div>
 </body>
 </html>

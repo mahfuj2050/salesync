@@ -14,6 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.business.salesync.models.Payment;
 import com.business.salesync.repository.PaymentRepository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import java.util.Optional;
 public class PaymentController {
 
     private final PaymentRepository paymentRepository;
+    
 
     @GetMapping
     public String listPayments(
@@ -161,4 +163,60 @@ public class PaymentController {
         model.addAttribute("paymentStatuses", Payment.PaymentStatus.values());
         return "fragments/payment_form";
     }
+    
+    public Payment savePaymentRecord(
+            Long refId,
+            Payment.RefType refType,
+            BigDecimal totalAmount,
+            BigDecimal totalVat,
+            BigDecimal discount,
+            BigDecimal grandTotal,
+            BigDecimal amountPaid,
+            BigDecimal amountDue,
+            String entityName) {
+
+        // ✅ Normalize null or invalid refType
+        if (refType == null) {
+            throw new IllegalArgumentException("RefType cannot be null");
+        }
+
+        // ✅ Build the payment safely
+        Payment payment = Payment.builder()
+                .refId(refId)
+                .refType(normalizeRefType(refType)) // ensure valid enum
+                .totalAmount(totalAmount != null ? totalAmount : BigDecimal.ZERO)
+                .totalVat(totalVat != null ? totalVat : BigDecimal.ZERO)
+                .discount(discount != null ? discount : BigDecimal.ZERO)
+                .grandTotal(grandTotal != null ? grandTotal : BigDecimal.ZERO)
+                .amountPaid(amountPaid != null ? amountPaid : BigDecimal.ZERO)
+                .amountDue(amountDue != null ? amountDue : BigDecimal.ZERO)
+                .paidAmount(amountPaid != null ? amountPaid : BigDecimal.ZERO)
+                .remarks("Payment for " + refType + " #" + refId)
+                .paymentDate(LocalDateTime.now())
+                .entityType(entityName)
+                .paymentType((refType == Payment.RefType.SALE_ORDER) ? "Revenue" : "Expense")
+                .paymentStatus(Payment.PaymentStatus.PENDING)
+                .build();
+
+        // ✅ Update payment status dynamically
+        payment.updatePaymentStatus(payment.getAmountPaid());
+
+        return paymentRepository.save(payment);
+    }
+    
+    
+    private Payment.RefType normalizeRefType(Payment.RefType refType) {
+        // if old enum types are ever passed in future
+        switch (refType) {
+            case SALE_ORDER:
+            case PURCHASE_ORDER:
+            case EXPENSE:
+                return refType;
+            default:
+                throw new IllegalArgumentException("Unsupported RefType: " + refType);
+        }
+    }
+
+
+
 }

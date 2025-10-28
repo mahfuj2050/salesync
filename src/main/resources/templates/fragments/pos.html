@@ -288,6 +288,8 @@
 							<input type="hidden" id="amountPaidInput" name="amountPaid">
 							<input type="hidden" id="amountDueInput" name="amountDue">
 							<input type="hidden" id="invoiceNumberInput" name="invoiceNumber">
+							<input type="hidden" id="finAccNameInput" name="finAccName">
+							<input type="hidden" id="paymentMethodInput" name="paymentMethod">
 
 	                        <hr>
 	
@@ -378,6 +380,32 @@
           <label class="form-label">Amount Due</label>
           <input type="text" id="amountDue" class="form-control" readonly value="0.00">
         </div>
+        
+      <div class="mb-3">
+		  <label class="form-label">Payment Method</label>
+		  <select id="paymentMethodSelect" class="form-select">
+		      <option value="">-- Select Method --</option>
+		      <option value="CASH">Cash</option>
+		      <option value="MFS">MFS</option>
+		      <option value="BANK">Bank Transfer</option>
+		  </select>
+		</div>
+		
+		<div class="mb-3">
+		  <label class="form-label">Account</label>
+		  <select id="finAccSelect" class="form-select">
+		      <option value="">-- Select Account --</option>
+		      <!-- Options will be loaded dynamically -->
+		  </select>
+		</div>
+		
+		<!-- Hidden inputs for backend submission -->
+		<input type="hidden" name="paymentMethod" id="paymentMethodInput">
+		<input type="hidden" name="finAccName" id="finAccNameInput">
+
+
+
+        
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -432,14 +460,24 @@ $(document).ready(function() {
     $(".row.g-3").children("div").each(function() {
         originalProductOrder.push($(this));
     });
+
+    // Set default values on page load
+    const grandTotal = parseFloat($("#grandTotal").text()) || 0;
+    $("#displayAmountPaid").text("0.00");
+    $("#displayAmountDue").text(grandTotal.toFixed(2));
+
+    $("#grandTotalInput").val(grandTotal.toFixed(2));
+    $("#amountPaidInput").val("0.00");
+    $("#amountDueInput").val(grandTotal.toFixed(2));
 });
 
+// ------------------------
 // Step 1: Real-time product search + alphabetical sorting
+// ------------------------
 $("#searchProduct").on("input", function () {
     const searchText = $(this).val().toLowerCase().trim();
     const container = $(".row.g-3");
     
-    // If search is empty, restore original order and show all products
     if (!searchText) {
         container.empty();
         originalProductOrder.forEach(function(product) {
@@ -449,7 +487,6 @@ $("#searchProduct").on("input", function () {
         return;
     }
     
-    // Filter products based on search text
     let matchingProducts = [];
     let nonMatchingProducts = [];
     
@@ -465,228 +502,212 @@ $("#searchProduct").on("input", function () {
         }
     });
     
-    // Sort matching products alphabetically
     matchingProducts.sort(function (a, b) {
         const nameA = a.find(".product-card").data("name").toLowerCase();
         const nameB = b.find(".product-card").data("name").toLowerCase();
         return nameA.localeCompare(nameB);
     });
     
-    // Clear container and rebuild with matching products first
     container.empty();
-    
-    // Add matching products (visible)
-    matchingProducts.forEach(function(product) {
-        container.append(product);
-        product.show();
-    });
-    
-    // Add non-matching products (hidden)
-    nonMatchingProducts.forEach(function(product) {
-        container.append(product);
-        product.hide();
-    });
+    matchingProducts.forEach(function(product) { container.append(product); product.show(); });
+    nonMatchingProducts.forEach(function(product) { container.append(product); product.hide(); });
 });
 
-//Step 2: Add product to cart on click
+// ------------------------
+// Step 2: Add product to cart on click
+// ------------------------
 $(document).on("click", ".product-card", function () {
     const productId = $(this).data("id"); 
     const name = $(this).data("name");
     const sellingPrice = parseFloat($(this).data("sellingprice"));
     const stockQuantity = parseInt($(this).data("quantity"));
 
-    console.log("Debug:", { productId, name, sellingPrice, stockQuantity });
-
-    // Check if product already in cart
     const existingRow = $(`#cartTableBody tr[data-product-id="${productId}"]`);
     if (existingRow.length > 0) {
         const currentQty = parseInt(existingRow.find(".qty").val());
-        if (currentQty >= stockQuantity) {
-            alert(`Cannot add more! Only ${stockQuantity} items available in stock.`);
-            return;
-        }
-        // Increase quantity by 1 if already in cart
+        if (currentQty >= stockQuantity) { alert(`Cannot add more! Only ${stockQuantity} items available.`); return; }
         existingRow.find(".qty").val(currentQty + 1).trigger("input");
         return;
     }
 
-    // Add validation for stock
-    if (stockQuantity <= 0) {
-        alert("This product is out of stock!");
-        return;
-    }
+    if (stockQuantity <= 0) { alert("This product is out of stock!"); return; }
 
-    // Add a new row to the invoice table
     const row = `<tr data-product-id="${productId}">
-            <td>${name}</td>
-            <td class="stock-quantity">${stockQuantity}</td>
-            <td>
-                <input type="number" class="form-control qty" value="1" min="1" max="${stockQuantity}" data-max="${stockQuantity}">
-                <small class="text-danger stock-warning" style="display: none; font-size: 0.7rem;">Exceeds stock!</small>
-            </td>
-            <td class="sellingPrice">${sellingPrice.toFixed(2)}</td>
-            <td class="subtotal">${sellingPrice.toFixed(2)}</td>
-            <td><button type="button" class="btn btn-danger btn-sm remove">🗑</button></td>
-        </tr>`;
+        <td>${name}</td>
+        <td class="stock-quantity">${stockQuantity}</td>
+        <td>
+            <input type="number" class="form-control qty" value="1" min="1" max="${stockQuantity}" data-max="${stockQuantity}">
+            <small class="text-danger stock-warning" style="display: none; font-size: 0.7rem;">Exceeds stock!</small>
+        </td>
+        <td class="sellingPrice">${sellingPrice.toFixed(2)}</td>
+        <td class="subtotal">${sellingPrice.toFixed(2)}</td>
+        <td><button type="button" class="btn btn-danger btn-sm remove">🗑</button></td>
+    </tr>`;
     $("#cartTableBody").append(row);
     updateTotals();
     $("#searchProduct").val("").trigger("input");
 });
 
-// Update subtotal on quantity change with stock validation
+// ------------------------
+// Step 3: Quantity change & remove
+// ------------------------
 $(document).on("input", ".qty", function () {
     const qty = parseInt($(this).val()) || 0;
     const maxStock = parseInt($(this).data("max"));
     const stockWarning = $(this).siblings(".stock-warning");
     
-    // Validate against stock
-    if (qty > maxStock) {
-        $(this).val(maxStock);
-        stockWarning.show();
-        setTimeout(() => stockWarning.hide(), 3000);
-        return;
-    } else {
-        stockWarning.hide();
-    }
-    
+    if (qty > maxStock) { $(this).val(maxStock); stockWarning.show(); setTimeout(() => stockWarning.hide(), 3000); return; }
+    stockWarning.hide();
+
     const sellingPrice = parseFloat($(this).closest("tr").find(".sellingPrice").text());
-    const subtotal = qty * sellingPrice;
-    $(this).closest("tr").find(".subtotal").text(subtotal.toFixed(2));
+    $(this).closest("tr").find(".subtotal").text((qty * sellingPrice).toFixed(2));
     updateTotals();
 });
 
-// Remove row
 $(document).on("click", ".remove", function () {
     $(this).closest("tr").remove();
     updateTotals();
 });
 
-// Update totals function
+// ------------------------
+// Step 4: Update totals
+// ------------------------
 function updateTotals() {
     let totalQty = 0;
     let totalAmount = 0;
-
     $("#cartTableBody tr").each(function () {
         totalQty += parseInt($(this).find(".qty").val());
         totalAmount += parseFloat($(this).find(".subtotal").text());
     });
 
     currentSubTotal = totalAmount;
-    
+    currentGrandTotal = currentSubTotal - currentDiscount;
+
     $("#totalQuantity").text(totalQty);
     $("#totalAmount").text(totalAmount.toFixed(2));
-    $("#grandTotal").text(totalAmount.toFixed(2));
-    
-    // Update current totals
-    currentGrandTotal = currentSubTotal - currentDiscount;
     $("#grandTotal").text(currentGrandTotal.toFixed(2));
 }
 
-//Payment Processing System
+// ------------------------
+// Step 5: Payment Modal Open
+// ------------------------
 let paymentDone = false;
 let alertShown = false;
 
-//✅ Set default values on page load
-$(document).ready(function () {
-    const grandTotal = parseFloat($("#grandTotal").text()) || 0;
-    $("#displayAmountPaid").text("0.00");
-    $("#displayAmountDue").text(grandTotal.toFixed(2));
-
-    $("#grandTotalInput").val(grandTotal.toFixed(2));
-    $("#amountPaidInput").val("0.00");
-    $("#amountDueInput").val(grandTotal.toFixed(2));
-});
-
-//💳 Open payment modal with total
 $(document).on("click", "#openPaymentModal", function () {
     currentSubTotal = parseFloat($("#totalAmount").text()) || 0;
     currentDiscount = 0;
     currentGrandTotal = currentSubTotal;
-    
+
     $("#modalSubTotal").val(currentSubTotal.toFixed(2));
     $("#discountAmount").val("0.00");
     $("#modalGrandTotal").val(currentGrandTotal.toFixed(2));
     $("#amountPaid").val("");
     $("#amountDue").val(currentGrandTotal.toFixed(2));
-    
+
+    // Reset Payment Method & Account dropdowns
+    $("#paymentMethodSelect").val("");
+    $("#finAccSelect").empty().append('<option value="">-- Select Account --</option>');
+
     const paymentModal = new bootstrap.Modal(document.getElementById("paymentModal"));
     paymentModal.show();
 });
 
-// 🧮 Calculate totals when discount changes
+// ------------------------
+// Step 6: Payment Method change -> load accounts dynamically
+// ------------------------
+$(document).on("change", "#paymentMethodSelect", function() {
+    const type = $(this).val();
+    const accountSelect = $("#finAccSelect");
+
+    accountSelect.empty().append('<option value="">-- Select Account --</option>');
+    if (!type) return;
+
+    $.ajax({
+        url: '/accounts/by-type',
+        type: 'GET',
+        data: { type: type },
+        success: function(accounts) {
+            accounts.forEach(acc => {
+                accountSelect.append(`<option value="${acc.finAccName}">${acc.finAccName}</option>`);
+            });
+        },
+        error: function() { alert("Failed to fetch accounts for " + type); }
+    });
+});
+
+// ------------------------
+// Step 7: Discount & Paid amount input
+// ------------------------
 $(document).on("input", "#discountAmount", function () {
     const discount = parseFloat($(this).val()) || 0;
-    currentDiscount = Math.min(discount, currentSubTotal); // Prevent negative grand total
+    currentDiscount = Math.min(discount, currentSubTotal);
     currentGrandTotal = Math.max(currentSubTotal - currentDiscount, 0);
-    
     $("#modalGrandTotal").val(currentGrandTotal.toFixed(2));
-    
-    // Recalculate amount due based on current payment
+
     const paid = parseFloat($("#amountPaid").val()) || 0;
-    const due = Math.max(currentGrandTotal - paid, 0);
-    $("#amountDue").val(due.toFixed(2));
+    $("#amountDue").val(Math.max(currentGrandTotal - paid, 0).toFixed(2));
 });
 
-// 🧮 Calculate due when typing amount paid
 $(document).on("input", "#amountPaid", function () {
     const paid = parseFloat($(this).val()) || 0;
-    const due = Math.max(currentGrandTotal - paid, 0);
-    $("#amountDue").val(due.toFixed(2));
+    $("#amountDue").val(Math.max(currentGrandTotal - paid, 0).toFixed(2));
 });
 
-// ✅ Confirm payment and submit
+// ------------------------
+// Step 8: Confirm Payment
+// ------------------------
 $(document).on("click", "#confirmPayment", function () {
     const amountPaid = parseFloat($("#amountPaid").val()) || 0;
-    const amountDue = currentGrandTotal - amountPaid;
+    const amountDue = Math.max(currentGrandTotal - amountPaid, 0);
 
-    // Validate payment
-    if (amountPaid < 0) {
-        alert("Amount paid cannot be negative");
-        return;
-    }
+    const paymentMethod = $("#paymentMethodSelect").val();
+    const finAccName = $("#finAccSelect").val();
+
+    if (!paymentMethod || !finAccName) { alert("Please select both Payment Method and Account!"); return; }
 
     // Fill hidden fields
+    $("#paymentMethodInput").val(paymentMethod);
+    $("#finAccNameInput").val(finAccName);
     $("#subTotalInput").val(currentSubTotal.toFixed(2));
     $("#discountInput").val(currentDiscount.toFixed(2));
     $("#grandTotalInput").val(currentGrandTotal.toFixed(2));
     $("#amountPaidInput").val(amountPaid.toFixed(2));
     $("#amountDueInput").val(amountDue.toFixed(2));
-    
-    // ✅ Update visible values in form summary
+
+    // Update visible summary
     $("#displaySubTotal").text(currentSubTotal.toFixed(2));
     $("#displayDiscount").text(currentDiscount.toFixed(2));
     $("#displayGrandTotal").text(currentGrandTotal.toFixed(2));
     $("#displayAmountPaid").text(amountPaid.toFixed(2));
     $("#displayAmountDue").text(amountDue.toFixed(2));
 
-    // ✅ Generate invoice number
+    // Generate invoice number
     const now = new Date();
-    const invoiceNumber = `INV-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${Math.floor(Math.random() * 9000 + 1000)}`;
+    const invoiceNumber = `INV-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}-${Math.floor(Math.random()*9000+1000)}`;
     $("#invoiceNumberInput").val(invoiceNumber);
-    
-    // ✅ Mark payment as done
+
     paymentDone = true;
-    
-    // ✅ Close modal
     const paymentModalEl = document.getElementById("paymentModal");
-    const paymentModal = bootstrap.Modal.getInstance(paymentModalEl);
-    paymentModal.hide();
+    bootstrap.Modal.getInstance(paymentModalEl).hide();
 });
 
-//✅ On "Submit Order" button click
+// ------------------------
+// Step 9: Submit Order
+// ------------------------
 $(document).on("click", "#submitOrderBtn", function (e) {
     if (!paymentDone) {
         e.preventDefault();
-        if (!alertShown) {
-            alert("Payment is not done yet. Click 'Receive Payment' to add payment.");
-            alertShown = true;
-        }
+        if (!alertShown) { alert("Payment is not done yet. Click 'Receive Payment' to add payment."); alertShown = true; }
         return;
     }
     addOrderDetailsToForm();
     $(this).closest("form").submit();
 });
 
+// ------------------------
+// Step 10: Add products as hidden fields
+// ------------------------
 function addOrderDetailsToForm() {
     $("input.dynamic-product").remove();
 
@@ -701,6 +722,7 @@ function addOrderDetailsToForm() {
     });
 }
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/pos_customer.js"></script>
 </body>

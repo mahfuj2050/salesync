@@ -1,42 +1,689 @@
 <!DOCTYPE html>
-<html layout:decorate="~{layout}" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 <head>
-<title>Create/Update Customer</title>
+    <title>Customer Form</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .form-container {
+            padding: 20px;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .form-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .form-header h2 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .form-header p {
+            margin: 5px 0;
+            opacity: 0.9;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        .breadcrumb a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            transition: opacity 0.3s;
+        }
+        
+        .breadcrumb a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card-header {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .card-header h3 {
+            margin: 0;
+            font-size: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-body {
+            padding: 30px;
+        }
+        
+        .form-grid {
+            display: grid;
+            gap: 25px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .required {
+            color: #dc3545;
+        }
+        
+        .form-control {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-control.error {
+            border-color: #dc3545;
+        }
+        
+        .form-control.success {
+            border-color: #28a745;
+        }
+        
+        .input-icon {
+            position: relative;
+        }
+        
+        .input-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        
+        .input-icon .form-control {
+            padding-left: 45px;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            font-size: 13px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .success-message {
+            color: #28a745;
+            font-size: 13px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .success-message.show {
+            display: block;
+        }
+        
+        .form-help {
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+        
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .loading-overlay.show {
+            display: flex;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-card {
+                margin: 0 10px;
+            }
+            
+            .card-body {
+                padding: 20px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div layout:fragment="content" class="container align-self-center">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Customer Form</h5>
-                <hr>
-                <form th:action="@{/customer}" th:object="${customer}" method="post">
-                    <div class="form-group mb-2">
-                        <label for="name">Name</label> <input type="text"
-                            class="form-control" id="name" th:field="*{name}"
-                            th:errorclass="is-invalid">
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}"
-                            th:errors="*{name}"></div>
-                    </div>
-                    <div class="form-group mb-2">
-                        <label for="address">Address</label> <input type="text"
-                            class="form-control" id="address" th:field="*{address}"
-                            th:errorclass="is-invalid">
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('address')}"
-                            th:errors="*{address}"></div>
-                    </div>
-                    <div class="form-group mb-2">
-                        <label for="phoneNumber">Phone Number</label> <input type="text"
-                            class="form-control" id="phoneNumber" th:field="*{phoneNumber}"
-                            th:errorclass="is-invalid">
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('phoneNumber')}"
-                            th:errors="*{phoneNumber}"></div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                    <input type="hidden" th:field="*{id}">
-                </form>
+<div layout:fragment="content">
+    <div class="form-container">
+        <!-- Header -->
+        <div class="form-header">
+            <h2 th:if="${!isEdit}">
+                <i class="fas fa-user-plus"></i> Add New Customer
+            </h2>
+            <h2 th:if="${isEdit}">
+                <i class="fas fa-user-edit"></i> Edit Customer
+            </h2>
+            <p th:if="${!isEdit}">Fill in the customer details below</p>
+            <p th:if="${isEdit}">Update customer information</p>
+            
+            <div class="breadcrumb">
+                <a href="/dashboard"><i class="fas fa-home"></i> Home</a>
+                <span>/</span>
+                <a href="/customers"><i class="fas fa-users"></i> Customers</a>
+                <span>/</span>
+                <span th:text="${isEdit ? 'Edit' : 'New'}">New</span>
             </div>
         </div>
 
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Form Card -->
+        <div class="form-card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-info-circle"></i>
+                    <span th:text="${isEdit ? 'Customer Information' : 'Customer Details'}">Customer Details</span>
+                </h3>
+            </div>
+            
+            <div class="card-body">
+                <form id="customerForm">
+                    <input type="hidden" id="customerId" th:value="${customer.id}">
+                    
+                    <div class="form-grid">
+                        <!-- Customer Name -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-user"></i>
+                                Customer Name <span class="required">*</span>
+                            </label>
+                            <div class="input-icon">
+                                <i class="fas fa-user-circle"></i>
+                                <input type="text" 
+                                       id="name" 
+                                       name="name" 
+                                       class="form-control"
+                                       th:value="${customer.name}"
+                                       placeholder="Enter customer full name"
+                                       required>
+                            </div>
+                            <span class="error-message" id="nameError"></span>
+                            <span class="form-help">Enter the full name of the customer</span>
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-phone"></i>
+                                Phone Number <span class="required">*</span>
+                            </label>
+                            <div class="input-icon">
+                                <i class="fas fa-mobile-alt"></i>
+                                <input type="tel" 
+                                       id="phoneNumber" 
+                                       name="phoneNumber" 
+                                       class="form-control"
+                                       th:value="${customer.phoneNumber}"
+                                       placeholder="01XXXXXXXXX"
+                                       required>
+                            </div>
+                            <span class="error-message" id="phoneError"></span>
+                            <span class="form-help">Format: 01XXXXXXXXX (11 digits)</span>
+                        </div>
+
+                        <!-- Email Address -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-envelope"></i>
+                                Email Address <span class="required">*</span>
+                            </label>
+                            <div class="input-icon">
+                                <i class="fas fa-at"></i>
+                                <input type="email" 
+                                       id="email" 
+                                       name="email" 
+                                       class="form-control"
+                                       th:value="${customer.email}"
+                                       placeholder="customer@example.com"
+                                       required>
+                            </div>
+                            <span class="error-message" id="emailError"></span>
+                            <span class="form-help">Valid email address required</span>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-map-marker-alt"></i>
+                                Address <span class="required">*</span>
+                            </label>
+                            <div class="input-icon">
+                                <i class="fas fa-home" style="top: 20px;"></i>
+                                <textarea id="address" 
+                                          name="address" 
+                                          class="form-control"
+                                          th:text="${customer.address}"
+                                          placeholder="Enter complete address with city and postal code"
+                                          required></textarea>
+                            </div>
+                            <span class="error-message" id="addressError"></span>
+                            <span class="form-help">Include street, city, and postal code</span>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <a href="/customers" class="btn btn-outline">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-save"></i>
+                            <span th:text="${isEdit ? 'Update Customer' : 'Save Customer'}">Save Customer</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="scripts">
+    const API_BASE = '/customers/api';
+    const isEdit = /*[[${isEdit}]]*/ false;
+    const customerId = /*[[${customer.id}]]*/ null;
+    
+    // Form submission
+    document.getElementById('customerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Validate form
+        if (!validateForm()) {
+            return;
+        }
+        
+        // Get form data
+        const formData = {
+            name: document.getElementById('name').value.trim(),
+            phoneNumber: document.getElementById('phoneNumber').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            address: document.getElementById('address').value.trim()
+        };
+        
+        // Show loading
+        showLoading(true);
+        disableSubmitButton(true);
+        
+        try {
+            const url = isEdit ? `${API_BASE}/update/${customerId}` : `${API_BASE}/create`;
+            const method = isEdit ? 'PUT' : 'POST';
+            
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            
+            showLoading(false);
+            disableSubmitButton(false);
+            
+            if (data.success) {
+                showAlert('success', data.message);
+                
+                // Redirect after 1.5 seconds
+                setTimeout(() => {
+                    window.location.href = '/customers';
+                }, 1500);
+            } else {
+                showAlert('danger', data.message);
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            showLoading(false);
+            disableSubmitButton(false);
+            showAlert('danger', 'Error submitting form. Please try again.');
+        }
+    });
+    
+    // Form validation
+    function validateForm() {
+        let isValid = true;
+        
+        // Clear previous errors
+        clearErrors();
+        
+        // Validate name
+        const name = document.getElementById('name').value.trim();
+        if (name.length < 2) {
+            showError('name', 'Name must be at least 2 characters');
+            isValid = false;
+        }
+        
+        // Validate phone
+        const phone = document.getElementById('phoneNumber').value.trim();
+        const phoneRegex = /^01[0-9]{9}$/;
+        if (!phoneRegex.test(phone)) {
+            showError('phoneNumber', 'Invalid phone number. Use format: 01XXXXXXXXX');
+            isValid = false;
+        }
+        
+        // Validate email
+        const email = document.getElementById('email').value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showError('email', 'Invalid email address');
+            isValid = false;
+        }
+        
+        // Validate address
+        const address = document.getElementById('address').value.trim();
+        if (address.length < 10) {
+            showError('address', 'Address must be at least 10 characters');
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+    
+    // Show error message
+    function showError(fieldName, message) {
+        const field = document.getElementById(fieldName);
+        const errorSpan = document.getElementById(fieldName + 'Error');
+        
+        field.classList.add('error');
+        errorSpan.textContent = message;
+        errorSpan.classList.add('show');
+    }
+    
+    // Clear all errors
+    function clearErrors() {
+        const fields = ['name', 'phoneNumber', 'email', 'address'];
+        fields.forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            const errorSpan = document.getElementById(fieldName + 'Error');
+            
+            field.classList.remove('error');
+            field.classList.remove('success');
+            errorSpan.classList.remove('show');
+        });
+    }
+    
+    // Real-time validation
+    document.getElementById('name').addEventListener('blur', function() {
+        if (this.value.trim().length >= 2) {
+            this.classList.remove('error');
+            this.classList.add('success');
+            document.getElementById('nameError').classList.remove('show');
+        }
+    });
+    
+    document.getElementById('phoneNumber').addEventListener('blur', function() {
+        const phoneRegex = /^01[0-9]{9}$/;
+        if (phoneRegex.test(this.value.trim())) {
+            this.classList.remove('error');
+            this.classList.add('success');
+            document.getElementById('phoneError').classList.remove('show');
+        }
+    });
+    
+    document.getElementById('email').addEventListener('blur', function() {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (emailRegex.test(this.value.trim())) {
+            this.classList.remove('error');
+            this.classList.add('success');
+            document.getElementById('emailError').classList.remove('show');
+        }
+    });
+    
+    document.getElementById('address').addEventListener('blur', function() {
+        if (this.value.trim().length >= 10) {
+            this.classList.remove('error');
+            this.classList.add('success');
+            document.getElementById('addressError').classList.remove('show');
+        }
+    });
+    
+    // Show loading overlay
+    function showLoading(show) {
+        const overlay = document.getElementById('loadingOverlay');
+        if (show) {
+            overlay.classList.add('show');
+        } else {
+            overlay.classList.remove('show');
+        }
+    }
+    
+    // Disable/enable submit button
+    function disableSubmitButton(disable) {
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = disable;
+    }
+    
+    // Show alert message
+    function showAlert(type, message) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+        alertDiv.innerHTML = `
+            <i class="fas fa-${icon}"></i>
+            <span>${message}</span>
+        `;
+        
+        alertContainer.appendChild(alertDiv);
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Remove after 5 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+    
+    // Reset form
+    function resetForm() {
+        if (confirm('Are you sure you want to reset the form?')) {
+            document.getElementById('customerForm').reset();
+            clearErrors();
+        }
+    }
+    
+    // Auto-format phone number
+    document.getElementById('phoneNumber').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 11) {
+            value = value.slice(0, 11);
+        }
+        e.target.value = value;
+    });
+</script>
 </body>
 </html>

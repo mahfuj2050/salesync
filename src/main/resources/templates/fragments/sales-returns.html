@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sale Returns</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <style>
+        .summary-card { transition: transform 0.2s; }
+        .summary-card:hover { transform: translateY(-2px); }
+        .action-buttons .btn { margin-right: 5px; }
+        .bg-light-green { background-color: #d2f8d2; }
+        .bg-light-red { background-color: #ffe9ec; }
+    </style>
+</head>
+<body>
+<div layout:fragment="content" class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Sale Returns</h1>
+        <a th:href="@{/sales-return/new}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> New Sale Return
+        </a>
+    </div>
+    
+    <!-- Summary Cards -->
+		<div class="row mb-4">
+		    <div class="col-md-4">
+		        <div class="card summary-card border-success bg-light-green">
+		            <div class="card-body">
+		                <div class="d-flex justify-content-between">
+		                    <div>
+		                        <h6 class="card-title text-success">Total Returns</h6>
+		                        <h3 class="text-success" th:text="${totalReturns}">0</h3>
+		                    </div>
+		                    <i class="bi bi-arrow-repeat text-success" style="font-size: 2rem;"></i>
+		                </div>
+		            </div>
+		        </div>
+		    </div>
+		
+		    <div class="col-md-4">
+		        <div class="card summary-card border-info bg-light">
+		            <div class="card-body">
+		                <div class="d-flex justify-content-between">
+		                    <div>
+		                        <h6 class="card-title text-info">Total Return Value</h6>
+		                        <h3 class="text-info" th:text="${#numbers.formatDecimal(totalReturnValue, 1, 2, 'POINT')}">0.00</h3>
+		                    </div>
+		                    <i class="bi bi-currency-dollar text-info" style="font-size: 2rem;"></i>
+		                </div>
+		            </div>
+		        </div>
+		    </div>
+		
+		    <div class="col-md-4">
+		        <div class="card summary-card border-warning bg-light-yellow">
+		            <div class="card-body">
+		                <div class="d-flex justify-content-between">
+		                    <div>
+		                        <h6 class="card-title text-warning">Unique Customers</h6>
+		                        <h3 class="text-warning" th:text="${totalCustomers}">0</h3>
+		                    </div>
+		                    <i class="bi bi-people text-warning" style="font-size: 2rem;"></i>
+		                </div>
+		            </div>
+		        </div>
+		    </div>
+		</div>
+
+    
+    
+    
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Return Ref No</th>
+                <th>Customer</th>
+                <th>Return Date</th>
+                <th>Total Amount</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="sr, iterStat : ${salesReturns}">
+                <td th:text="${iterStat.index + 1}">1</td>
+                <td th:text="${sr.returnRefNo}">SRN-001</td>
+                <td th:text="${sr.customer != null ? sr.customer.name : 'Walk-in'}">Customer A</td>
+                <td th:text="${#temporals.format(sr.returnDate, 'dd-MM-yyyy HH:mm')}">12-10-2025</td>
+                <td th:text="${#numbers.formatDecimal(sr.totalReturnAmount, 1, 'POINT', 2, 'NONE')}">1000.00</td>
+                <td>
+				    <button type="button" class="btn btn-sm btn-info view-return-btn"
+				        th:attr="data-id=${sr.id}">
+				        <i class="bi bi-eye"></i> View
+				    </button>
+				</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(salesReturns)}">
+                <td colspan="6" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                    <p class="mt-2">No sales returns found</p>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+<!-- ✅ View Details Modal -->
+<!-- Modal -->
+<div class="modal fade" id="viewReturnModal" tabindex="-1" aria-labelledby="viewReturnLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content" style="min-height:200px;">
+      <div id="modalBodyContent">
+          <div class="text-center p-5">
+              <div class="spinner-border text-primary" role="status"></div>
+              <p class="mt-3">Select a sale return to view details...</p>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script th:inline="javascript">
+document.addEventListener("DOMContentLoaded", function () {
+    const modalElement = document.getElementById('viewReturnModal');
+    const modalInstance = new bootstrap.Modal(modalElement, { backdrop: 'static', keyboard: true });
+
+    document.querySelectorAll('.view-return-btn').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const id = this.getAttribute('data-id');
+            const modalBody = document.getElementById('modalBodyContent');
+
+            // show loading indicator while fetching
+            modalBody.innerHTML = `
+                <div class="text-center p-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-3">Loading details...</p>
+                </div>
+            `;
+
+            // show modal immediately
+            modalInstance.show();
+
+            try {
+                const response = await fetch('/sales-return/details/' + id);
+                if (!response.ok) throw new Error('Network error');
+                const html = await response.text();
+
+                // inject content
+                modalBody.innerHTML = html;
+
+            } catch (err) {
+                console.error(err);
+                modalBody.innerHTML = `
+                    <div class="alert alert-danger m-4">Failed to load details. Please try again.</div>
+                `;
+            }
+        });
+    });
+});
+
+//Add this to your main page (not in the fragment)
+function printSalesReturn() {
+    var printContents = document.getElementById('salesReturnPrintContent').innerHTML;
+    var originalContents = document.body.innerHTML;
+    
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+    location.reload(); // Reload to restore functionality
+}
+</script>
+
+</body>
+</html>

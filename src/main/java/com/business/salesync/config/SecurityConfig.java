@@ -11,6 +11,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.thymeleaf.spring6.SpringTemplateEngine;
+import org.thymeleaf.spring6.view.ThymeleafViewResolver;
 
 @Configuration
 @EnableWebSecurity
@@ -38,7 +40,10 @@ public class SecurityConfig {
                     "/js/**",
                     "/images/**",
                     "/webfonts/**",
-                    "/fontawesome/**"
+                    "/fontawesome/**",
+                    "/ledger/**",  // Add this line to allow ledger endpoints
+                    "/login",
+                    "/login-error"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
@@ -51,8 +56,13 @@ public class SecurityConfig {
             .logout(logout -> logout
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                 .permitAll()
-            );
-        
+            )
+            .headers(headers -> headers
+                    .frameOptions(frameOptions -> frameOptions.sameOrigin())
+                    .contentSecurityPolicy(csp -> csp
+                        .policyDirectives("frame-ancestors 'self'")
+                    )
+                );
         return http.build();
     }
 
@@ -65,6 +75,9 @@ public class SecurityConfig {
             "/js/**",
             "/images/**",
             "/webfonts/**",
+            "/api/ledger/**",  // For API endpoints
+            "/supplier/**",  
+            "/customer/**", 
             "/fontawesome/**"
         );
     }
@@ -75,5 +88,13 @@ public class SecurityConfig {
         daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
         daoAuthenticationProvider.setUserDetailsService(userDetailsService);
         return daoAuthenticationProvider;
+    }
+    
+    @Bean
+    public ThymeleafViewResolver thymeleafViewResolver(SpringTemplateEngine templateEngine) {
+        ThymeleafViewResolver resolver = new ThymeleafViewResolver();
+        resolver.setTemplateEngine(templateEngine);
+        resolver.setCharacterEncoding("UTF-8");
+        return resolver;
     }
 }

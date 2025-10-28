@@ -1,0 +1,82 @@
+<div id="salesReturnPrintContent" style="font-family: Arial, sans-serif; width: 100%; max-width: 90%; margin: auto; padding: 20px; color: #333;">
+    <!-- Header -->
+    <div class="mb-3 text-center">
+        <h4 class="fw-bold text-primary mb-1">Sales Return</h4>
+        <p class="mb-0"><strong>Ref No:</strong> <span th:text="${salesReturn.returnRefNo}">SRN-001</span></p>
+        <hr style="border-top: 2px dashed #007bff; margin: 10px 0;">
+    </div>
+    <!-- Customer & Info -->
+    <div class="mb-3" style="font-size: 14px;">
+        <p class="mb-1"><strong>Customer:</strong> <span th:text="${salesReturn.customer != null ? salesReturn.customer.name : 'Walk-in Customer'}">Customer A</span></p>
+        <p class="mb-1"><strong>Return Date:</strong> 
+            <span th:text="${#temporals.format(salesReturn.returnDate, 'dd-MM-yyyy HH:mm')}">12-10-2025</span>
+        </p>
+        <p class="mb-1"><strong>Remarks:</strong> 
+            <span th:text="${salesReturn.remarks != null ? salesReturn.remarks : 'N/A'}">Damaged items</span>
+        </p>
+    </div>
+    <!-- Items Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle" style="font-size: 14px; min-width: 100%;">
+            <thead class="table-light">
+                <tr>
+                    <th style="width:5%; text-align:center;">#</th>
+                    <th style="width:45%;">Product</th>
+                    <th style="width:15%; text-align:center;">Qty</th>
+                    <th style="width:15%; text-align:right;">Unit Price</th>
+                    <th style="width:20%; text-align:right;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item, iStat : ${salesReturn.items}">
+                    <td th:text="${iStat.index + 1}" class="text-center">1</td>
+                    <td th:text="${item.product.name}">Product A</td>
+                    <td th:text="${item.quantityReturned}" class="text-center">5</td>
+                    <td th:text="${#numbers.formatDecimal(item.unitPrice, 2, 2)}" class="text-end">500.00</td>
+                    <td th:text="${#numbers.formatDecimal(item.unitPrice * item.quantityReturned, 2, 2)}" class="text-end">1000.00</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr class="fw-bold table-light">
+                    <td colspan="4" class="text-end">Total Return Amount</td>
+                    <td th:text="${#numbers.formatDecimal(salesReturn.totalReturnAmount, 2, 2)}" class="text-end">1500.00</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <!-- Footer / Close and Print Buttons -->
+    <div class="mt-3 text-end no-print">
+        <button type="button" class="btn btn-primary me-2" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle"></i> Close
+        </button>
+    </div>
+</div>
+
+<style>
+    @media print {
+        /* Hide buttons and non-essential elements */
+        .no-print {
+            display: none !important;
+        }
+        
+        /* Expand content to full width */
+        #salesReturnPrintContent {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 30px !important;
+        }
+        
+        /* Ensure table prints properly */
+        table {
+            width: 100% !important;
+        }
+        
+        /* Remove Bootstrap modal backdrop if present */
+        .modal-backdrop {
+            display: none !important;
+        }
+    }
+</style>

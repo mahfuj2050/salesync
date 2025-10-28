@@ -23,6 +23,13 @@
             color: #dc3545;
         }
     </style>
+    
+    <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("dateOrdered").value = today;
+  });
+</script>
 </head>
 
 <body>
@@ -53,7 +60,8 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Order Date</label>
-                    <input type="date" class="form-control" th:field="*{insertDate}" required>
+                    <input type="date" class="form-control" name="*{insertDate}"
+       									id="*{insertDate}" th:value="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}" required>
                 </div>
             </div>
 
@@ -97,7 +105,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Amount Paid</label>
-                    <input type="number" class="form-control" id="amountPaid" value="0" min="0">
+                    <input type="number" class="form-control" id="amountPaid" name="amountPaid" value="0" min="0">
                 </div>
             </div>
 

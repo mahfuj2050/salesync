@@ -47,143 +47,224 @@
     <div class="table-responsive">
         <table class="table table-bordered table-hover align-middle">
             <thead>
-            <tr>
-                <th>#</th>
-                <th>Purchase Order No.</th>
-                <th>Supplier</th>
-                <th>Order Date</th>
-                <th>Total Amount</th>
-                <th>Status</th>
-                <th class="text-center">Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="order, iterStat : ${orders}">
-                <td th:text="${iterStat.count}"></td>
-                <td th:text="${order.purchaseOrderNo}"></td>
-                <td th:text="${order.supplierName}"></td>
-                <td th:text="${#temporals.format(order.insertDate, 'dd-MM-yyyy HH:mm')}"></td>
-                <td th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}"></td>
-                <td>
-                    <span th:text="${order.status}" th:class="'status-badge status-' + ${order.status}"></span>
-                </td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-outline-info view-details-btn"
-                            th:data-id="${order.id}"
-                            th:data-order="${order.purchaseOrderNo}"
-                            th:data-supplier="${order.supplierName}"
-                            th:data-date="${#temporals.format(order.insertDate, 'dd-MM-yyyy HH:mm')}"
-                            th:data-status="${order.status}"
-                            th:data-total="${order.totalAmount}"
-                            th:data-remarks="${order.remarks}"
-                            th:data-items="${order.items}"
-                    >
-                        <i class="fas fa-eye"></i> View
-                    </button>
-                </td>
-            </tr>
-            </tbody>
+				<tr>
+				    <th>#</th>
+				    <th>PO No.</th>
+				    <th>Supplier</th>
+				    <th>Order Date</th>
+				    <th>Total</th>
+				    <th>Discount</th>
+				    <th>Grand Total</th>
+				    <th>Paid</th>
+				    <th>Due</th>
+				    <th>Status</th>
+				    <th>Payment</th>
+				    <th class="text-center">Actions</th>
+				</tr>
+				</thead>
+				<tbody>
+				<tr th:each="order, iterStat : ${orders}">
+				    <td th:text="${iterStat.count}"></td>
+				    <td th:text="${order.purchaseOrderNo}"></td>
+				    <td th:text="${order.supplierName}"></td>
+				    <td th:text="${#temporals.format(order.insertDate, 'dd-MM-yyyy')}"></td>
+				
+				    <td th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}"></td>
+				    <td th:text="${#numbers.formatDecimal(order.discount, 1, 'COMMA', 2, 'POINT')}"></td>
+				    <td th:text="${#numbers.formatDecimal(order.grandTotal, 1, 'COMMA', 2, 'POINT')}"></td>
+				    <td th:text="${#numbers.formatDecimal(order.amountPaid, 1, 'COMMA', 2, 'POINT')}"></td>
+				    <td th:text="${#numbers.formatDecimal(order.amountDue, 1, 'COMMA', 2, 'POINT')}"></td>
+				
+				    <td>
+				        <span th:text="${order.status}" th:class="'status-badge status-' + ${order.status}"></span>
+				    </td>
+				    <td>
+				        <span th:classappend="'badge bg-' + 
+				            (${order.paymentStatus == 'PAID'} ? 'success' : 
+				             (${order.paymentStatus == 'PARTIALLY_PAID'} ? 'warning' : 'danger'))"
+				              th:text="${order.paymentStatus}"></span>
+				    </td>
+				
+				    <td class="text-center">
+				        <button class="btn btn-sm btn-outline-info view-details-btn"
+					        th:data-items="${order.itemsJson}"
+					        th:data-id="${order.id}"
+					        th:data-order="${order.purchaseOrderNo}"
+					        th:data-supplier="${order.supplierName}"
+					        th:data-date="${#temporals.format(order.insertDate, 'dd-MM-yyyy HH:mm')}"
+					        th:data-status="${order.status}"
+					        th:data-paymentstatus="${order.paymentStatus}"
+					        th:data-total="${order.totalAmount}"
+					        th:data-discount="${order.discount}"
+					        th:data-grandtotal="${order.grandTotal}"
+					        th:data-amountpaid="${order.amountPaid}"
+					        th:data-amountdue="${order.amountDue}"
+					        th:data-remarks="${order.remarks}">
+					    <i class="fas fa-eye"></i> View
+					</button>
+
+
+				    </td>
+				</tr>
+				</tbody>
+
         </table>
     </div>
 
-    <!-- ✅ Modal for Order Details -->
-    <div class="modal fade" id="purchaseDetailsModal" tabindex="-1" aria-labelledby="purchaseDetailsLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="purchaseDetailsLabel">Purchase Order Details</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <h6>Order Info:</h6>
-                        <p><strong>Order No:</strong> <span id="modalOrderNo"></span></p>
-                        <p><strong>Supplier:</strong> <span id="modalSupplier"></span></p>
-                        <p><strong>Date:</strong> <span id="modalDate"></span></p>
-                        <p><strong>Status:</strong> <span id="modalStatus"></span></p>
-                        <p><strong>Remarks:</strong> <span id="modalRemarks"></span></p>
-                    </div>
+<!-- ✅ Updated Modal for Purchase Order / Invoice -->
+<div class="modal fade" id="purchaseDetailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-sm">
+      
+      <!-- Header -->
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="fas fa-receipt me-2"></i>Invoice</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
 
-                    <h6>Items:</h6>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Product</th>
-                                <th>Qty</th>
-                                <th>Purchase Price</th>
-                                <th>Selling Price</th>
-                                <th>Subtotal</th>
-                                <th>VAT %</th>
-                                <th>VAT Amt</th>
-                                <th>Subtotal + VAT</th>
-                            </tr>
-                            </thead>
-                            <tbody id="modalItemsBody">
-                            <!-- Items inserted dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
+      <div class="modal-body p-4">
 
-                    <div class="text-end mt-3">
-                        <h5><strong>Total Amount: </strong> <span id="modalTotalAmount"></span></h5>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
+        <!-- Company & Order Info -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <p class="mb-0 fw-bold">Mubin Enterprise</p>
+            <p class="mb-0">598, Kunia Targas</p>
+            <p class="mb-0">Block-B, Word-37</p>
+            <p class="mb-0">Tongi, Gazipur</p>
+            <p class="mb-0">Phone: +01819817473</p>
+          </div>
+          <div class="text-end">
+            <h6 class="text-muted">Invoice #</h6>
+            <p id="modalOrderNo" class="fw-bold mb-1"></p>
+
+            <h6 class="text-muted">Date</h6>
+            <p id="modalDate" class="mb-0"></p>
+
+            <h6 class="text-muted">Supplier</h6>
+            <p id="modalSupplier" class="mb-0"></p>
+          </div>
         </div>
+
+        <!-- Payment / Status Info -->
+        <div class="mb-4 row">
+          <div class="col-md-6">
+            <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+            <p><strong>Payment Status:</strong> <span id="modalPaymentStatus"></span></p>
+            <p><strong>Remarks:</strong> <span id="modalRemarks"></span></p>
+          </div>
+          <div class="col-md-6 text-end">
+            <p><strong>Total Amount:</strong> <span id="modalGrandTotal"></span></p>
+            <p><strong>Amount Paid:</strong> <span id="modalAmountPaid">0.00</span></p>
+            <p><strong>Amount Due:</strong> <span id="modalAmountDue">0.00</span></p>
+          </div>
+        </div>
+
+        <!-- Items Table -->
+        <table class="table table-bordered table-hover align-middle">
+          <thead class="table-light text-center">
+            <tr>
+              <th>#</th>
+              <th>Product</th>
+              <th>Qty</th>
+              <th>Purchase Price</th>
+              <th>Selling Price</th>
+              <th>Subtotal</th>
+              <th>VAT %</th>
+              <th>VAT Amt</th>
+              <th>Subtotal + VAT</th>
+            </tr>
+          </thead>
+          <tbody id="modalItemsBody">
+            <!-- JS inserts rows here -->
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="8" class="text-end">Grand Total</th>
+              <th id="modalGrandTotalFooter" class="text-center"></th>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- Footer / Note -->
+        <div class="mt-4 text-muted text-center small">
+          Thank you for your purchase! Contact <a href="mailto:mahfuj2050@gmail.com">mahfuj2050@gmail.com</a> for questions.
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+
     </div>
+  </div>
+</div>
+
 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<div layout:fragment="scripts">
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        document.querySelectorAll(".view-details-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                // Set basic info
-                document.getElementById("modalOrderNo").textContent = btn.dataset.order;
-                document.getElementById("modalSupplier").textContent = btn.dataset.supplier;
-                document.getElementById("modalDate").textContent = btn.dataset.date;
-                document.getElementById("modalStatus").textContent = btn.dataset.status;
-                document.getElementById("modalRemarks").textContent = btn.dataset.remarks || "-";
-                document.getElementById("modalTotalAmount").textContent = btn.dataset.total;
+document.addEventListener("DOMContentLoaded", () => {
 
-                // Parse items (Spring sends as JSON string)
-                let itemsData = btn.getAttribute("data-items");
-                let items = [];
-                try {
-                    items = JSON.parse(itemsData.replace(/&quot;/g, '"'));
-                } catch (e) {
-                    console.error("Error parsing items:", e);
-                }
+    function formatNumber(num) {
+        return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
 
-                const tbody = document.getElementById("modalItemsBody");
-                tbody.innerHTML = "";
+    document.querySelectorAll(".view-details-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
 
-                items.forEach((item, index) => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${item.productName}</td>
-                        <td>${item.quantity}</td>
-                        <td>${item.purchasePrice.toFixed(2)}</td>
-                        <td>${item.sellingPrice.toFixed(2)}</td>
-                        <td>${item.subtotal.toFixed(2)}</td>
-                        <td>${item.vatPercent.toFixed(2)}</td>
-                        <td>${item.vatAmount.toFixed(2)}</td>
-                        <td>${item.subtotalWithVat.toFixed(2)}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+            // ✅ Basic info
+            document.getElementById("modalOrderNo").textContent = btn.dataset.order;
+            document.getElementById("modalSupplier").textContent = btn.dataset.supplier;
+            document.getElementById("modalDate").textContent = btn.dataset.date;
+            document.getElementById("modalStatus").textContent = btn.dataset.status;
+            document.getElementById("modalRemarks").textContent = btn.dataset.remarks || "-";
+            document.getElementById("modalPaymentStatus").textContent = btn.dataset.paymentstatus;
 
-                new bootstrap.Modal(document.getElementById("purchaseDetailsModal")).show();
+            // ✅ Financial info
+            document.getElementById("modalGrandTotal").textContent = formatNumber(btn.dataset.grandtotal);
+            document.getElementById("modalGrandTotalFooter").textContent = formatNumber(btn.dataset.grandtotal);
+            document.getElementById("modalAmountPaid").textContent = formatNumber(btn.dataset.amountpaid);
+            document.getElementById("modalAmountDue").textContent = formatNumber(btn.dataset.amountdue);
+
+            // ✅ Items table
+            let items = [];
+            try {
+                items = JSON.parse(btn.dataset.items.replace(/&quot;/g, '"'));
+            } catch (e) {
+                console.error("Error parsing items:", e);
+            }
+
+            const tbody = document.getElementById("modalItemsBody");
+            tbody.innerHTML = "";
+
+            items.forEach((item, index) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.productName}</td>
+                    <td>${item.quantity}</td>
+                    <td>${formatNumber(item.purchasePrice)}</td>
+                    <td>${formatNumber(item.sellingPrice)}</td>
+                    <td>${formatNumber(item.subtotal)}</td>
+                    <td>${formatNumber(item.vatPercent)}</td>
+                    <td>${formatNumber(item.vatAmount)}</td>
+                    <td>${formatNumber(item.subtotalWithVat)}</td>
+                `;
+                tbody.appendChild(tr);
             });
+
+            // ✅ Show modal
+            new bootstrap.Modal(document.getElementById("purchaseDetailsModal")).show();
         });
     });
+});
 </script>
+</div>
+
 </body>
 </html>

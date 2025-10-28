@@ -7,7 +7,7 @@
 
   <!-- Bootstrap CSS -->
   <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet" />
-
+ <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
   <!-- Font Awesome (Local v7.1.0) -->
   <link th:href="@{/fontawesome/css/fontawesome.css}" rel="stylesheet" />
   <link th:href="@{/fontawesome/css/brands.css}" rel="stylesheet" />
@@ -38,6 +38,9 @@
       min-height: 100vh;
       border-right: 1px solid #dee2e6;
       transition: all 0.3s ease-in-out;
+      overflow-y: auto;      /* Enable vertical scrolling */
+      position: sticky;      /* Keep sidebar in place */
+      top: 0;        
     }
 
     #sidebarMenu .nav-link {
@@ -73,6 +76,85 @@
     footer a {
       color: #0d6efd;
       text-decoration: none;
+    }
+    
+    
+    
+    /* Ledger Menu Styles */
+    .ledger-menu {
+        margin: 5px 0;
+    }
+    
+    .ledger-menu .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        margin: 2px 8px;
+    }
+    
+    .ledger-menu .nav-link:hover {
+        background: #f8f9fa;
+        color: #667eea;
+        padding-left: 25px;
+    }
+    
+    .ledger-menu .nav-link i:first-child {
+        width: 24px;
+        margin-right: 12px;
+        font-size: 16px;
+    }
+    
+    .ledger-menu .nav-link .fa-chevron-down {
+        font-size: 12px;
+        transition: transform 0.3s ease;
+    }
+    
+    .ledger-menu .nav-link[aria-expanded="true"] .fa-chevron-down {
+        transform: rotate(180deg);
+    }
+    
+    .ledger-menu .nav-link.collapsed {
+        color: #495057;
+    }
+    
+    .ledger-menu .nav-link.collapsed:hover {
+        color: #667eea;
+    }
+    
+    /* Submenu Styles */
+    .ledger-submenu {
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 5px 8px;
+        padding: 8px 0;
+    }
+    
+    .ledger-submenu .nav-link {
+        padding: 10px 15px 10px 35px;
+        font-size: 14px;
+        color: #6c757d;
+    }
+    
+    .ledger-submenu .nav-link:hover {
+        background: white;
+        color: #667eea;
+        padding-left: 40px;
+    }
+    
+    .ledger-submenu .nav-link i {
+        width: 20px;
+        margin-right: 10px;
+        font-size: 14px;
+    }
+    
+    .ledger-submenu .nav-link.active {
+        background: white;
+        color: #667eea;
+        font-weight: 600;
     }
   </style>
 </head>
@@ -111,25 +193,158 @@
               <a th:classappend="${@requestUtil.currentUri('/')}" class="nav-link" th:href="@{/}">
                 <i class="fas fa-home me-2"></i> Home
               </a>
-            </li>
-            <li>
-              <a th:classappend="${@requestUtil.currentUri('/orders')}" class="nav-link" th:href="@{/orders}">
-                <i class="fas fa-shopping-cart me-2"></i> Orders
-              </a>
-            </li>
-            <li>
-              <a th:classappend="${@requestUtil.currentUri('/pos')}" class="nav-link" th:href="@{/pos}">
-                <i class="fas fa-cash-register me-2"></i> POS
-              </a>
-            </li>
-            <li>
-              <a th:classappend="${@requestUtil.currentUri('/purchase')}" class="nav-link" th:href="@{/purchase/new}">
-                <i class="fas fa-file-invoice-dollar me-2"></i> Purchase
-              </a>
-            </li>
+            
+            <li class="nav-item dropdown">
+			  <a class="nav-link d-flex justify-content-between align-items-center" 
+			     href="#" 
+			     id="salesDropdown" 
+			     role="button" 
+			     data-bs-toggle="dropdown" 
+			     aria-expanded="false">
+			     
+			     <span> <i class="fas fa-shopping-cart me-2"></i>Sales</span>
+			     <i class="fas fa-chevron-down ms-2"></i> <!-- Arrow at the far right -->
+			  </a>
+			  
+			  <ul class="dropdown-menu" aria-labelledby="salesDropdown">
+			    <li>
+			      <a class="dropdown-item" th:href="@{/pos}">
+			        <i class="fas fa-plus-circle me-1"></i> New Sale
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/sales-return/new}">
+			        <i class="fas fa-undo-alt me-1"></i> Sales Return
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/orders}">
+			        <i class="fas fa-list me-1"></i> Sales List
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/sales-return}">
+			        <i class="fas fa-list-alt me-1"></i> Sales Return List
+			      </a>
+			    </li>
+			  </ul>
+			</li>
+			            
+            
+			<li class="nav-item dropdown">
+			  <a class="nav-link d-flex justify-content-between align-items-center" 
+			     href="#" 
+			     id="purchaseDropdown" 
+			     role="button" 
+			     data-bs-toggle="dropdown" 
+			     aria-expanded="false">
+			     
+			     <span><i class="fas fa-file-invoice-dollar me-2"></i> Purchase</span>
+			     <i class="fas fa-chevron-down ms-2"></i> <!-- Arrow at the far right -->
+			  </a>
+			  
+			  <ul class="dropdown-menu" aria-labelledby="purchaseDropdown">
+			    <li>
+			      <a class="dropdown-item" th:href="@{/purchase/new}">
+			        <i class="fas fa-plus-circle me-1"></i> New Purchase
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/purchase-return/new}">
+			        <i class="fas fa-undo-alt me-1"></i> Purchase Return
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/purchase}">
+			        <i class="fas fa-list me-1"></i> Purchase List
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/purchase-return}">
+			        <i class="fas fa-list-alt me-1"></i> Purchase Return List
+			      </a>
+			    </li>
+			  </ul>
+			</li>
+			
+			<li class="nav-item dropdown">
+			  <a class="nav-link d-flex justify-content-between align-items-center" 
+			     href="#" 
+			     id="expenseDropdown" 
+			     role="button" 
+			     data-bs-toggle="dropdown" 
+			     aria-expanded="false">
+			     
+			     <span><i class="fas fa-file-invoice me-2"></i> Expense</span>
+			     <i class="fas fa-chevron-down ms-2"></i> <!-- Arrow at the far right -->
+			  </a>
+			  
+			  <ul class="dropdown-menu" aria-labelledby="expenseDropdown">
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expenses/new}">
+			        <i class="fas fa-plus-circle me-1"></i> New Expense
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expenses/return/new}">
+			        <i class="fas fa-undo-alt me-1"></i> Expense Return
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expenses}">
+			        <i class="fas fa-list me-1"></i> Expense List
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-return}">
+			        <i class="fas fa-list-alt me-1"></i> Expense Return List
+			      </a>
+			    </li>
+			  </ul>
+			</li>
+			
+			
+			<!-- Add this to your left sidebar menu -->
+
+		<!-- Ledger Menu (Collapsible) -->
+			<!-- Enhanced Ledger Menu -->
+			<li class="nav-item ledger-menu">
+			    <a class="nav-link collapsed" 
+			       data-bs-toggle="collapse" 
+			       href="#ledgerSubmenu" 
+			       role="button" 
+			       aria-expanded="false" 
+			       aria-controls="ledgerSubmenu">
+			        <i class="fas fa-book"></i>
+			        <span>Ledger</span>
+			        <i class="fas fa-chevron-down ms-auto"></i>
+			    </a>
+			    <div class="collapse ledger-submenu" id="ledgerSubmenu">
+			        <ul class="nav flex-column">
+			            <li class="nav-item">
+			                <a class="nav-link" href="/ledger/customer">
+			                    <i class="fas fa-user-tie"></i>
+			                    <span>Customer Ledger</span>
+			                </a>
+			            </li>
+			            <li class="nav-item">
+			                <a class="nav-link" href="/ledger/supplier">
+			                    <i class="fas fa-truck"></i>
+			                    <span>Supplier Ledger</span>
+			                </a>
+			            </li>
+			        </ul>
+			    </div>
+			</li>
+
             <li>
               <a th:classappend="${@requestUtil.currentUri('/payments')}" class="nav-link" th:href="@{/payments}">
                 <i class="fas fa-money-bill-wave me-2"></i> Payment
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/accounts/tabs')}" class="nav-link" th:href="@{/accounts/tabs}">
+                <i class="fas fa-money-bill-wave me-2"></i> Accounts
               </a>
             </li>
             <li>
@@ -207,5 +422,42 @@
 
   <!-- Child page scripts -->
   <th:block layout:fragment="scripts"></th:block>
+  
+  <script>
+window.deleteEntity = function(entityType, id) {
+  if (!id || id === 'null' || id === 'undefined') {
+    Swal.fire('Error', 'Invalid ID — cannot delete this record.', 'error');
+    return;
+  }
+
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "This will permanently delete the selected " + entityType + ".",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!'
+  }).then(function(result) {
+    if (result.isConfirmed) {
+      fetch('/api/delete/' + encodeURIComponent(entityType) + '/' + encodeURIComponent(id), { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => {
+          if (data?.status === 'success') {
+            Swal.fire('Deleted!', data.message, 'success').then(() => location.reload());
+          } else if (data?.status === 'blocked') {
+            Swal.fire('Cannot Delete', data.message, 'info');
+          } else {
+            Swal.fire('Error', data?.message || 'Unknown error', 'error');
+          }
+        })
+        .catch(() => Swal.fire('Error', 'Something went wrong!', 'error'));
+    }
+  });
+};
+</script>
+
+  <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 </body>
 </html>

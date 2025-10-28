@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Purchase Return</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+<body class="bg-light">
+
+    <div layout:fragment="content" class="container align-self-center">
+    <h3 class="text-center mb-4">Purchase Return Form</h3>
+
+    <form th:action="@{/purchase-return/save}" th:object="${purchaseReturn}" method="post">
+        <div class="card p-4 shadow-sm rounded-3">
+
+            <!-- Header -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label>Return Ref No:</label>
+                    <input type="text" class="form-control" th:field="*{returnRefNo}">
+                </div>
+                <div class="col-md-4">
+                    <label>Supplier:</label>
+                    <select class="form-select" th:field="*{supplier.id}">
+                        <option th:each="sup : ${suppliers}" th:value="${sup.id}" th:text="${sup.supplierName}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label>Return Date:</label>
+                    <input type="datetime-local" class="form-control" th:field="*{returnDate}">
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <table class="table table-bordered" id="returnTable">
+                <thead class="table-secondary">
+                <tr>
+                    <th>Product</th>
+                    <th>Qty Returned</th>
+                    <th>Unit Cost</th>
+                    <th>Total</th>
+                    <th>Remarks</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item, iStat : *{items}">
+                    <td>
+                        <select class="form-select" th:field="*{items[__${iStat.index}__].product.id}">
+                            <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.productName}"></option>
+                        </select>
+                    </td>
+                    <td><input type="number" class="form-control qty" th:field="*{items[__${iStat.index}__].quantityReturned}" min="1"></td>
+                    <td><input type="number" class="form-control price" th:field="*{items[__${iStat.index}__].unitCost}" step="0.01"></td>
+                    <td><input type="number" class="form-control total" th:field="*{items[__${iStat.index}__].totalCost}" readonly></td>
+                    <td><input type="text" class="form-control" th:field="*{items[__${iStat.index}__].remarks}"></td>
+                    <td><button type="button" class="btn btn-danger btn-sm removeRow">✖</button></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <button type="button" class="btn btn-primary mb-3" id="addRow">+ Add Item</button>
+
+            <!-- Footer -->
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <label>Remarks:</label>
+                    <textarea class="form-control" th:field="*{remarks}" rows="2"></textarea>
+                </div>
+                <div class="col-md-6 text-end">
+                    <h5>Total Return: <span id="totalReturn">0.00</span></h5>
+                    <input type="hidden" th:field="*{totalReturnAmount}" id="totalReturnAmount">
+                </div>
+            </div>
+
+            <div class="text-end mt-4">
+                <button type="submit" class="btn btn-success px-4">Save Return</button>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+
+
+
+<script>
+    $(document).on('input', '.qty, .price', function () {
+        const row = $(this).closest('tr');
+        const qty = parseFloat(row.find('.qty').val()) || 0;
+        const price = parseFloat(row.find('.price').val()) || 0;
+        const total = qty * price;
+        row.find('.total').val(total.toFixed(2));
+        calculateTotal();
+    });
+
+    $('#addRow').on('click', function () {
+        const newRow = $('#returnTable tbody tr:first').clone(true);
+        newRow.find('input').val('');
+        $('#returnTable tbody').append(newRow);
+    });
+
+    $(document).on('click', '.removeRow', function () {
+        if ($('#returnTable tbody tr').length > 1) {
+            $(this).closest('tr').remove();
+            calculateTotal();
+        }
+    });
+
+    function calculateTotal() {
+        let sum = 0;
+        $('.total').each(function () {
+            sum += parseFloat($(this).val()) || 0;
+        });
+        $('#totalReturn').text(sum.toFixed(2));
+        $('#totalReturnAmount').val(sum.toFixed(2));
+    }
+</script>
+
+</body>
+</html>

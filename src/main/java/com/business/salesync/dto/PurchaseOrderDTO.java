@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import jakarta.persistence.Transient;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,6 +27,16 @@ public class PurchaseOrderDTO {
  private String paymentStatus;
  private String status;
  private String remarks;
+ @Transient
+ private String itemsJson;
+
+ public String getItemsJson() {
+     return itemsJson;
+ }
+
+ public void setItemsJson(String itemsJson) {
+     this.itemsJson = itemsJson;
+ }
 
  private List<PurchaseOrderItemDTO> items;
 }

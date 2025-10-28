@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.business.salesync.models.Brand;
+import com.business.salesync.models.Supplier;
 import com.business.salesync.repository.BrandRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 
 import java.util.Optional;
@@ -71,18 +73,26 @@ public class BrandController {
         model.addAttribute("brand", new Brand());
         return "fragments/brand_form";
     }
+    
+    @GetMapping("/{id}")
+    public String showEditForm(Model model, @PathVariable Long id) {
+    	Brand brand = brandRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+        model.addAttribute("brand", brand);
+        return "fragments/brand_form";
+    }
 
     // Show form for editing existing brand
-    @GetMapping("/{id}")
-    public String showEditForm(@PathVariable Long id, Model model) {
-        Optional<Brand> brand = brandRepository.findById(id);
-        if (brand.isPresent()) {
-            model.addAttribute("brand", brand.get());
-            return "brand_form";
-        } else {
-            return "redirect:/brands";
-        }
-    }
+//    @GetMapping("/{id}")
+//    public String showEditForm(@PathVariable Long id, Model model) {
+//        Optional<Brand> brand = brandRepository.findById(id);
+//        if (brand.isPresent()) {
+//            model.addAttribute("brand", brand.get());
+//            return "brand_form";
+//        } else {
+//            return "redirect:/brands";
+//        }
+//    }
 
     // Save or update brand
     @PostMapping("/save")

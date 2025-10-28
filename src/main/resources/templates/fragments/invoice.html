@@ -23,6 +23,12 @@
       font-weight: 900;
       color: #C0392B;
     }
+    
+    .header-area2 {
+      font-size: 1.2em;
+      font-weight: 500;
+      color: rgb(64, 128, 128);
+    }
 
     .transaction-info { font-size: 14px; margin-bottom: 10px; }
     .item-row { display: flex; justify-content: space-between; font-size: 14px; }
@@ -42,10 +48,25 @@
 </head>
 <body>
 
-  <!-- ✅ Shop Name -->
-  <div class="center logo-container">
-    <div class="header-area">Mubin Enterprise</div>
-  </div>
+
+<!-- ✅ Shop Info -->
+		<div class="center logo-container" style="text-align: center; margin-bottom: 20px;">
+		    <!-- Shop Name -->
+		    <div class="header-area" style="font-size: 24px; font-weight: bold;">Mubin Enterprise</div>
+		
+		    <!-- Address -->
+		    <div class="header-area2" style="font-size: 12px; margin-top: 5px;">
+		        598, Kunia Targas<br>
+		        Block-B, Word-37<br>
+		        Tongi, Gazipur
+		    </div>
+		
+		    <!-- Phone -->
+		    <div class="header-area" style="font-size: 12px; margin-top: 5px;">
+		        Phone: 01819817473
+		    </div>
+		</div>
+
 
   <hr>
 
@@ -56,8 +77,8 @@
       <span th:text="${order.invoiceNumber}">1759123971600-13-2841</span>
     </div>
     <div class="summary-row">
-      <span>Sale Time:</span>
-      <span th:text="${#temporals.format(order.dateOrdered, 'dd/MM/yy HH:mm:ss')}">29/09/25 11:32:51</span>
+      <span>Transaction Date:</span>
+      <span th:text="${#temporals.format(order.dateOrdered, 'dd/MM/yy')}">29/09/25</span>
     </div>
   </div>
 

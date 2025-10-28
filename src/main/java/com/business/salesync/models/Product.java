@@ -198,4 +198,60 @@ public class Product {
         if (this.warrantyPeriod == null) this.warrantyPeriod = 0;
         if (this.guaranteePeriod == null) this.guaranteePeriod = 0;
     }
+    
+    @Transient
+    public String getWarrantyLabel() {
+        if (warrantyPeriod == null || warrantyPeriod <= 0) {
+            return "No Warranty";
+        }
+
+        String label = warrantyPeriod + " month" + (warrantyPeriod > 1 ? "s" : "");
+        if (getWarrantyExpiryDate() != null) {
+            label += " (Expires: " + getWarrantyExpiryDate().format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy")) + ")";
+        }
+        return label;
+    }
+    
+    @Transient
+    public LocalDate getWarrantyExpiryDate() {
+        if (manufactureDate != null && warrantyPeriod != null && warrantyPeriod > 0) {
+            return manufactureDate.plusMonths(warrantyPeriod);
+        }
+        return null;
+    }
+
+    @Transient
+    public boolean isWarrantyExpired() {
+        LocalDate expiry = getWarrantyExpiryDate();
+        return expiry != null && expiry.isBefore(LocalDate.now());
+    }
+    
+    @Transient
+    public String getGuaranteeLabel() {
+        if (guaranteePeriod == null || guaranteePeriod <= 0) {
+            return "No Guarantee";
+        }
+
+        String label = guaranteePeriod + " month" + (guaranteePeriod > 1 ? "s" : "");
+        if (getGuaranteeExpiryDate() != null) {
+            label += " (Expires: " + getGuaranteeExpiryDate().format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy")) + ")";
+        }
+        return label;
+    }
+
+    @Transient
+    public LocalDate getGuaranteeExpiryDate() {
+        if (manufactureDate != null && guaranteePeriod != null && guaranteePeriod > 0) {
+            return manufactureDate.plusMonths(guaranteePeriod);
+        }
+        return null;
+    }
+
+    @Transient
+    public boolean isGuaranteeExpired() {
+        LocalDate expiry = getGuaranteeExpiryDate();
+        return expiry != null && expiry.isBefore(LocalDate.now());
+    }
+
+
 }

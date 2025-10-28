@@ -196,6 +196,9 @@
                     <i th:if="${currentSort != 'quantity'}" class="bi bi-arrow-down-up"></i>
                   </a>
                 </th>
+                </th>
+                <th>Warranty</th>
+                <th>Guarantee</th>
                 <th>Status</th>
                 <th>Unit</th>
                 <th>Actions</th>
@@ -205,26 +208,58 @@
               <tr th:each="product : ${product_page.content}" 
                   th:classappend="${product.quantity == 0} ? 'out-of-stock' : (${product.quantity <= product.minStockLevel} ? 'low-stock' : '')">
                 <td class="text-start" th:text="${product.name}"></td>
-                <td th:text="${product.sku}"></td>
+                <td th:text="${product.sku}" style="text-align: center;"></td>
                 <td th:text="${product.category?.name ?: 'N/A'}"></td>
                 <td th:text="${product.brand?.name ?: 'N/A'}"></td>
                 <td th:text="${#numbers.formatDecimal(product.sellingPrice, 0, 2, 'POINT')}"></td>
                 <td th:text="${product.quantity}"></td>
-                <td>
-                  <span th:if="${product.quantity == 0}" class="badge bg-danger stock-status">Out of Stock</span>
-                  <span th:elseif="${product.quantity <= product.minStockLevel}" class="badge bg-warning stock-status">Low Stock</span>
-                  <span th:else class="badge bg-success stock-status">In Stock</span>
-                </td>
+				<td>
+				  <span th:if="${product.warrantyExpiryDate != null}">
+				    <span th:text="${#temporals.format(product.warrantyExpiryDate, 'dd-MM-yyyy')}"></span><br>
+				    <span th:text="${product.warrantyExpired ? 'Expired' : 'Active'}"
+				          th:classappend="${product.warrantyExpired ? 'badge bg-danger stock-status' : 'badge bg-success stock-status'}">
+				    </span>
+				  </span>
+				
+				  <span th:if="${product.warrantyExpiryDate == null}"
+				        class="badge bg-secondary stock-status">No Warranty</span>
+				</td>
+				
+				<td>
+				  <span th:if="${product.guaranteeExpiryDate != null}">
+				    <span th:text="${#temporals.format(product.guaranteeExpiryDate, 'dd-MM-yyyy')}"></span><br>
+				    <span th:text="${product.guaranteeExpired ? 'Expired' : 'Active'}"
+				          th:classappend="${product.guaranteeExpired ? 'badge bg-danger stock-status' : 'badge bg-success stock-status'}">
+				    </span>
+				  </span>
+				
+				  <span th:if="${product.guaranteeExpiryDate == null}"
+				        class="badge bg-secondary stock-status">No Guarantee</span>
+				</td>
+
+
+				<td>
+				  <span th:if="${product.quantity == 0}" class="badge bg-danger stock-status">Out of Stock</span>
+				  <span th:if="${product.quantity > 0 and product.quantity <= product.minStockLevel}"
+				        class="badge bg-warning stock-status">Low Stock</span>
+				  <span th:if="${product.quantity > product.minStockLevel}"
+				        class="badge bg-success stock-status">In Stock</span>
+				</td>
+
+
                 <td th:text="${product.unitOfMeasure}"></td>
                 <td>
                   <div class="btn-group btn-group-sm">
                     <a th:href="@{/product/{id}(id=${product.id})}" class="btn btn-outline-primary" title="Edit">
                       <i class="bi bi-pencil"></i>
                     </a>
-                    <button type="button" th:attr="data-id=${product.id}" class="btn btn-outline-danger" 
-                            data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal" title="Delete">
-                      <i class="bi bi-trash"></i>
-                    </button>
+	               <button type="button"
+					        class="btn btn-outline-danger"
+					        th:onclick="|deleteEntity('product', ${product.id})|"
+					        title="Delete">
+					    <i class="bi bi-trash"></i>
+					</button>
+
                   </div>
                 </td>
               </tr>

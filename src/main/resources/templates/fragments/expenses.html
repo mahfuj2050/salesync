@@ -1,45 +1,790 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 <head>
     <title>Expenses List</title>
-    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .expenses-container {
+            padding: 20px;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .expenses-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .expenses-header h2 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .expenses-header p {
+            margin: 5px 0;
+            opacity: 0.9;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .stat-icon.total {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .stat-icon.pending {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+        
+        .stat-icon.paid {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+        
+        .stat-content {
+            flex: 1;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .filter-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-reset {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-reset:hover {
+            background: #5a6268;
+        }
+        
+        .table-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            padding: 20px 25px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .expenses-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .expenses-table thead {
+            background: #f8f9fa;
+        }
+        
+        .expenses-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+        
+        .expenses-table td {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
+        }
+        
+        .expenses-table tbody tr:hover {
+            background: #f8f9fa;
+            transition: background 0.2s;
+        }
+        
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .btn-view {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-view:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+        
+        .btn-edit {
+            background: #ffc107;
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            overflow-y: auto;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-container {
+            background: white;
+            max-width: 95%;
+            width: 1200px;
+            margin: 40px auto;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+        
+        .modal-header {
+            padding: 25px 30px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 24px;
+            color: #2c3e50;
+        }
+        
+        .modal-close {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            background: #c0392b;
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            padding: 0;
+            max-height: 85vh;
+            overflow: hidden;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="container mt-5">
-    <h2>Expenses List</h2>
-    <a th:href="@{/expenses/new}" class="btn btn-success mb-3">Add New Expense</a>
-    <table class="table table-bordered table-striped">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Date</th>
-            <th>Category</th>
-            <th>Vendor</th>
-            <th>Description</th>
-            <th>Amount</th>
-            <th>Payment Method</th>
-            <th>Reference No.</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="expense : ${expenses}">
-            <td th:text="${expense.id}"></td>
-            <td th:text="${expense.expenseDate}"></td>
-            <td th:text="${expense.category}"></td>
-            <td th:text="${expense.vendorName}"></td>
-            <td th:text="${expense.description}"></td>
-            <td th:text="${expense.amount}"></td>
-            <td th:text="${expense.paymentMethod}"></td>
-            <td th:text="${expense.referenceNo}"></td>
-            <td>
-                <a th:href="@{/expenses/edit/{id}(id=${expense.id})}" class="btn btn-sm btn-primary">Edit</a>
-                <a th:href="@{/expenses/delete/{id}(id=${expense.id})}" class="btn btn-sm btn-danger"
-                   onclick="return confirm('Are you sure?')">Delete</a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+<div layout:fragment="content">
+    <div class="expenses-container">
+        <!-- Header -->
+        <div class="expenses-header">
+            <h2>🧾 Expense Management</h2>
+            <p>Track and manage all business expenses</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stat-icon total">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Expenses (This Month)</div>
+                    <div class="stat-value" id="totalExpenses">৳ 0.00</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon pending">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Pending Payments</div>
+                    <div class="stat-value" id="pendingPayments">৳ 0.00</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon paid">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Pending Count</div>
+                    <div class="stat-value" id="pendingCount">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-card">
+            <form id="filterForm">
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label for="filterCategory">Category</label>
+                        <select id="filterCategory" name="category" class="form-control">
+                            <option value="">All Categories</option>
+                            <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat}"></option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="filterStatus">Payment Status</label>
+                        <select id="filterStatus" name="paymentStatus" class="form-control">
+                            <option value="">All Status</option>
+                            <option th:each="status : ${paymentStatuses}" th:value="${status}" th:text="${status}"></option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="filterFromDate">From Date</label>
+                        <input type="date" id="filterFromDate" name="fromDate" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="filterToDate">To Date</label>
+                        <input type="date" id="filterToDate" name="toDate" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="filterVendor">Vendor Name</label>
+                        <input type="text" id="filterVendor" name="vendorName" class="form-control" placeholder="Search vendor...">
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <button type="button" class="btn btn-reset" onclick="resetFilters()">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="window.location.href='/expenses/new'">
+                        <i class="fas fa-plus"></i> New Expense
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading expenses...</p>
+        </div>
+
+        <!-- Expenses Table -->
+        <div class="table-card" id="tableCard">
+            <div class="table-header">
+                <h3>Expenses List</h3>
+                <span id="expenseCount">0 expenses</span>
+            </div>
+            <div class="table-responsive">
+                <table class="expenses-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Expense Ref</th>
+                            <th>Date</th>
+                            <th>Vendor</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Total Amount</th>
+                            <th>Paid</th>
+                            <th>Due</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expensesTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <i class="fas fa-receipt"></i>
+            <h3>No Expenses Found</h3>
+            <p>Start by creating your first expense record</p>
+            <button class="btn btn-success" onclick="window.location.href='/expenses/new'">
+                <i class="fas fa-plus"></i> Create Expense
+            </button>
+        </div>
+    </div>
+
+    <!-- Invoice Modal -->
+    <div id="invoiceModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-invoice"></i> Expense Invoice</h2>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Invoice will be loaded here -->
+            </div>
+        </div>
+    </div>
 </div>
+
+<script layout:fragment="scripts">
+    const API_BASE = '/expenses/api';
+    
+    // Load expenses on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadExpenses();
+        loadStats();
+    });
+    
+    // Load all expenses
+    async function loadExpenses(filters = {}) {
+        const loadingState = document.getElementById('loadingState');
+        const tableCard = document.getElementById('tableCard');
+        const emptyState = document.getElementById('emptyState');
+        const tbody = document.getElementById('expensesTableBody');
+        
+        // Show loading
+        loadingState.style.display = 'block';
+        tableCard.style.display = 'none';
+        emptyState.style.display = 'none';
+        
+        try {
+            const params = new URLSearchParams(filters);
+            const response = await fetch(`${API_BASE}/list?${params}`);
+            const data = await response.json();
+            
+            loadingState.style.display = 'none';
+            
+            if (data.success && data.expenses && data.expenses.length > 0) {
+                displayExpenses(data.expenses);
+                tableCard.style.display = 'block';
+            } else {
+                emptyState.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error loading expenses:', error);
+            loadingState.style.display = 'none';
+            emptyState.style.display = 'block';
+        }
+    }
+    
+    // Display expenses in table
+    function displayExpenses(expenses) {
+        const tbody = document.getElementById('expensesTableBody');
+        const countSpan = document.getElementById('expenseCount');
+        
+        tbody.innerHTML = '';
+        countSpan.textContent = `${expenses.length} expense${expenses.length !== 1 ? 's' : ''}`;
+        
+        expenses.forEach((expense, index) => {
+            const row = document.createElement('tr');
+            
+            // Format date
+            const date = new Date(expense.expenseDate);
+            const formattedDate = date.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+            
+            // Status badge
+            let statusBadge = '';
+            if (expense.paymentStatus === 'PAID') {
+                statusBadge = '<span class="badge badge-success">PAID</span>';
+            } else if (expense.paymentStatus === 'PARTIALLY_PAID') {
+                statusBadge = '<span class="badge badge-warning">PARTIAL</span>';
+            } else if (expense.paymentStatus === 'PENDING') {
+                statusBadge = '<span class="badge badge-danger">PENDING</span>';
+            } else if (expense.paymentStatus === 'OVERDUE') {
+                statusBadge = '<span class="badge badge-danger">OVERDUE</span>';
+            }
+            
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td><strong>${expense.expenseRefNo}</strong></td>
+                <td>${formattedDate}</td>
+                <td>${expense.vendorName || '-'}</td>
+                <td><span class="badge badge-info">${expense.expenseCategory}</span></td>
+                <td><small>${expense.description || '-'}</small></td>
+                <td><strong>৳ ${expense.totalAmount.toFixed(2)}</strong></td>
+                <td class="text-success">৳ ${expense.amountPaid.toFixed(2)}</td>
+                <td class="text-danger">৳ ${expense.amountDue.toFixed(2)}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn-icon btn-view" onclick="viewExpense(${expense.id})" title="View Invoice">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn-icon btn-edit" onclick="editExpense(${expense.id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon btn-delete" onclick="deleteExpense(${expense.id}, '${expense.expenseRefNo}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+    
+    // Load statistics
+    async function loadStats() {
+        try {
+            const response = await fetch(`${API_BASE}/stats`);
+            const data = await response.json();
+            
+            if (data.success && data.stats) {
+                document.getElementById('totalExpenses').textContent = 
+                    `৳ ${data.stats.totalExpensesThisMonth.toFixed(2)}`;
+                document.getElementById('pendingPayments').textContent = 
+                    `৳ ${data.stats.totalPendingPayments.toFixed(2)}`;
+                document.getElementById('pendingCount').textContent = 
+                    data.stats.pendingExpensesCount;
+            }
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        }
+    }
+    
+    // View expense invoice in modal
+    function viewExpense(id) {
+        const modal = document.getElementById('invoiceModal');
+        const modalBody = document.getElementById('modalBody');
+        
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        
+        modalBody.innerHTML = `
+            <iframe src="/expenses/invoice/${id}" 
+                    style="width: 100%; height: 80vh; border: none;">
+            </iframe>
+        `;
+    }
+    
+    // Edit expense
+    function editExpense(id) {
+        window.location.href = `/expenses/edit/${id}`;
+    }
+    
+    // Delete expense
+    async function deleteExpense(id, refNo) {
+        if (!confirm(`Are you sure you want to delete expense ${refNo}?`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${API_BASE}/delete/${id}`, {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Expense deleted successfully');
+                loadExpenses();
+                loadStats();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error deleting expense:', error);
+            alert('Error deleting expense');
+        }
+    }
+    
+    // Close modal
+    function closeModal() {
+        const modal = document.getElementById('invoiceModal');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    
+    // Handle filter form submission
+    document.getElementById('filterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const filters = {
+            category: document.getElementById('filterCategory').value,
+            paymentStatus: document.getElementById('filterStatus').value,
+            fromDate: document.getElementById('filterFromDate').value,
+            toDate: document.getElementById('filterToDate').value,
+            vendorName: document.getElementById('filterVendor').value
+        };
+        
+        // Remove empty values
+        Object.keys(filters).forEach(key => {
+            if (!filters[key]) delete filters[key];
+        });
+        
+        loadExpenses(filters);
+    });
+    
+    // Reset filters
+    function resetFilters() {
+        document.getElementById('filterForm').reset();
+        loadExpenses();
+    }
+    
+    // Close modal on outside click
+    window.onclick = function(event) {
+        const modal = document.getElementById('invoiceModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+</script>
 </body>
 </html>

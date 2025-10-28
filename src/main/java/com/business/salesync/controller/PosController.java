@@ -28,11 +28,13 @@ import com.business.salesync.models.OrderDetails;
 import com.business.salesync.models.Payment;
 import com.business.salesync.models.Product;
 import com.business.salesync.models.SalesOrder;
+import com.business.salesync.models.PurchaseOrder.PaymentStatus;
 import com.business.salesync.repository.CategoryRepository;
 import com.business.salesync.repository.CustomerRepository;
 import com.business.salesync.repository.OrderRepository;
 import com.business.salesync.repository.PaymentRepository;
 import com.business.salesync.repository.ProductRepository;
+import com.business.salesync.service.FinancialAccountService;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.qrcode.QRCodeWriter;
@@ -56,6 +58,12 @@ public class PosController {
 
     @Autowired
     private PaymentRepository paymentRepository;
+
+    @Autowired
+    private PaymentController paymentController;
+    
+    @Autowired
+    private FinancialAccountService financialAccountService;
     
     
 
@@ -80,7 +88,7 @@ public class PosController {
         return "redirect:/pos";
     }*/
     
-    
+	/*-
     @PostMapping("/pos/checkout")
     public String checkout(@RequestParam Map<String, String> formData, RedirectAttributes redirect) {
     	
@@ -246,6 +254,162 @@ public class PosController {
             return "redirect:/pos";
         }
     }
+    
+    */
+    
+    @PostMapping("/pos/checkout")
+    public String checkout(@RequestParam Map<String, String> formData, RedirectAttributes redirect) {
+
+        // ✅ Debug: Print all form data
+        System.out.println("=== FORM DATA RECEIVED ===");
+        formData.forEach((key, value) -> System.out.println(key + " = " + value));
+        System.out.println("==========================");
+
+        try {
+            String invoiceNumber = formData.get("invoiceNumber");
+
+            // ✅ Safe BigDecimal parsing
+            BigDecimal subTotal = parseBigDecimalSafe(formData.get("subTotal"));
+            BigDecimal discount = parseBigDecimalSafe(formData.get("discount"));
+            BigDecimal grandTotal = parseBigDecimalSafe(formData.get("grandTotal"));
+            BigDecimal amountPaid = parseBigDecimalSafe(formData.get("amountPaid"));
+            BigDecimal amountDue = parseBigDecimalSafe(formData.get("amountDue"));
+
+            // ✅ Validate required fields
+            if (grandTotal == null || amountPaid == null) {
+                redirect.addFlashAttribute("error", "Grand total and amount paid are required");
+                return "redirect:/pos";
+            }
+
+            Long customerId = formData.get("customerId") != null && !formData.get("customerId").isEmpty()
+                    ? Long.parseLong(formData.get("customerId")) : null;
+
+            Customer customer = (customerId != null)
+                    ? customerRepository.findById(customerId).orElse(null)
+                    : customerRepository.findById(1L).orElse(null); // fallback Walk-in
+
+            SalesOrder order = new SalesOrder();
+            order.setInvoiceNumber(invoiceNumber);
+            order.setTotalAmount(subTotal);
+            order.setDiscount(discount != null ? discount : BigDecimal.ZERO);
+            order.setGrandTotal(grandTotal);
+            order.setAmountPaid(amountPaid);
+            order.setAmountDue(amountDue != null ? amountDue : BigDecimal.ZERO);
+            order.setDateOrdered(LocalDate.now());
+            order.setCustomer(customer);
+
+            List<OrderDetails> details = new ArrayList<>();
+
+            // ✅ Process products
+            formData.entrySet().stream()
+                .filter(e -> e.getKey().startsWith("product_"))
+                .forEach(e -> {
+                    try {
+                        Long productId = Long.parseLong(e.getKey().split("_")[1]);
+                        String quantityStr = formData.get("quantity_" + productId);
+                        String priceStr = formData.get("sellingPrice_" + productId);
+                        if (quantityStr == null || priceStr == null) return;
+
+                        int quantity = Integer.parseInt(quantityStr);
+                        BigDecimal price = parseBigDecimalSafe(priceStr);
+                        if (price == null) return;
+
+                        Product product = productRepository.findById(productId).orElse(null);
+                        if (product != null) {
+                            int currentStock = product.getQuantity();
+                            if (currentStock < quantity) throw new RuntimeException("Insufficient stock for " + product.getName());
+                            product.setQuantity(currentStock - quantity);
+                            productRepository.save(product);
+
+                            OrderDetails od = new OrderDetails();
+                            od.setOrder(order);
+                            od.setProduct(product);
+                            od.setQuantity(quantity);
+                            od.setUnitPrice(price);
+                            od.setInvoiceNumber(invoiceNumber);
+                            details.add(od);
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("Error processing product: " + e.getKey() + " - " + ex.getMessage());
+                    }
+                });
+
+            if (details.isEmpty()) {
+                redirect.addFlashAttribute("error", "No valid products in order");
+                return "redirect:/pos";
+            }
+
+            order.setOrderDetails(details);
+            orderRepository.save(order);
+
+            // ✅ Save Payment using PaymentController helper
+            if (amountPaid.compareTo(BigDecimal.ZERO) > 0) {
+                String entityName = (customer != null) ? customer.getName() : "Walk-in Customer";
+                paymentController.savePaymentRecord(
+                        order.getId(),
+                        Payment.RefType.SALE_ORDER,
+                        order.getTotalAmount(),
+                        order.getTotalVat(),
+                        order.getDiscount(),
+                        order.getGrandTotal(),
+                        order.getAmountPaid(),
+                        order.getAmountDue(),
+                        entityName
+                );
+            }
+            
+            // -------------------------------
+            // 1️⃣ Record financial transaction
+            // -------------------------------
+            if (amountPaid.compareTo(BigDecimal.ZERO) > 0) {
+                String entityName = (customer != null) ? customer.getName() : "Walk-in Customer";
+
+                // Decide account name based on payment method
+                String paymentMethod = formData.get("paymentMethod"); // "Cash", "bKash", "Bank Transfer"
+                String finAccName = switch (paymentMethod) {
+                    case "Cash" -> "Cash at Hand";
+                    case "bKash" -> "bKash";
+                    case "Bank Transfer" -> "Pubali Bank PLC"; // choose appropriate bank
+                    default -> "Cash at Hand";
+                };
+
+                String transactionType = "CASH_IN"; // POS collection is money coming in
+                
+                PaymentStatus poPaymentStatus;
+                if (amountPaid.compareTo(BigDecimal.ZERO) <= 0) {
+                    poPaymentStatus = PaymentStatus.PENDING;
+                } else if (amountPaid.compareTo(grandTotal) < 0) {
+                    poPaymentStatus = PaymentStatus.PARTIALLY_PAID;
+                } else {
+                    poPaymentStatus = PaymentStatus.PAID;
+                }
+
+
+                financialAccountService.recordTransaction(
+                        finAccName,
+                        paymentMethod,        // finAccType
+                        amountPaid.doubleValue(),
+                        transactionType,      // CASH_IN
+                        "SALE_ORDER",         // refType
+                        "CUSTOMER",           // entityType
+                        entityName,
+                        invoiceNumber,        // trnRefNo
+                        order.getId(),        // refId
+                        "POS Sale Payment",   // remarks
+                        poPaymentStatus.name()         // paymentStatus as String
+                );
+            }
+
+            redirect.addFlashAttribute("success", "Order placed successfully. Invoice: " + invoiceNumber);
+            return "redirect:/pos/invoice/" + order.getId();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirect.addFlashAttribute("error", "Checkout failed: " + e.getMessage());
+            return "redirect:/pos";
+        }
+    }
+
 
     // ✅ Helper method for safe BigDecimal parsing
     private BigDecimal parseBigDecimalSafe(String value) {

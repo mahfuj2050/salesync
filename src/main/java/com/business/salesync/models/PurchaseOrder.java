@@ -72,6 +72,17 @@ public class PurchaseOrder {
     @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PurchaseOrderItem> items = new ArrayList<>(); // Initialize the list
     
+    @Transient
+    private String itemsJson;
+
+    public String getItemsJson() {
+        return itemsJson;
+    }
+
+    public void setItemsJson(String itemsJson) {
+        this.itemsJson = itemsJson;
+    }
+    
     // Helper method to safely add items
     public void addItem(PurchaseOrderItem item) {
         if (items == null) {

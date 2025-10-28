@@ -6,10 +6,16 @@
   <!-- ✅ Local Bootstrap Icons -->
   <link th:href="@{/css/bootstrap-icons.css}" rel="stylesheet" />
 
-  <!-- ✅ Local SweetAlert2 -->
-  <script th:src="@{/js/sweetalert2.all.min.js}"></script>
 <!--   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+ 
+ 
+ <script th:inline="javascript">
+    function deleteCategory(id) {
+        deleteEntity('category', id);
+    }
+</script>
+ 
 </head>
 
 <body>
@@ -37,33 +43,41 @@
                 <td class="text-start" th:text="${category.name}"></td>
                 <td class="text-start" th:text="${category.description}"></td>
                 <td class="text-center">
-                    <a th:href="@{/categories/edit/{id}(id=${category.id})}" 
-                       class="btn btn-sm btn-warning">Edit</a>
-                    <a href="#" 
-                       th:data-id="${category.id}" 
-                       class="btn btn-sm btn-danger btn-delete">Delete</a>
+                	<div class="btn-group btn-group-sm">
+	                    <a th:href="@{/categories/edit/{id}(id=${category.id})}" class="btn btn-outline-primary" title="Edit">
+	                      <i class="bi bi-pencil"></i>
+	                    </a>  
+	                  <button type="button"
+        class="btn btn-outline-danger btn-delete"
+        th:onclick="|deleteEntity('category', ${category.id})|"
+        title="Delete">
+    <i class="bi bi-trash"></i>
+</button>
+
+
+                    </div>
                 </td>
             </tr>
         </tbody>
     </table>
 </div>
-
+</div>
 <!-- SweetAlert Scripts -->
 <script th:inline="javascript">
-    // Show success alert after redirect
-    let successMessage = [[${success}]];
-    if (successMessage) {
-        Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: successMessage,
-            timer: 2000,
-            showConfirmButton: false
-        });
-    }
+  let successMessage = /*[[${success != null} ? ${success} : 'null' ]]*/ null;
+
+  if (successMessage) {
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: successMessage,
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
 
     // Confirm before deleting
-    document.querySelectorAll('.btn-delete').forEach(btn => {
+/*     document.querySelectorAll('.btn-delete').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
             const categoryId = this.getAttribute('data-id');
@@ -81,7 +95,10 @@
                 }
             });
         });
-    });
+    }); */
+   
 </script>
+
+
 </body>
 </html>

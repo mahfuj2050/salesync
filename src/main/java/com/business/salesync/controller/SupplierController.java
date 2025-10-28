@@ -12,9 +12,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.business.salesync.models.Customer;
 import com.business.salesync.models.Supplier;
 import com.business.salesync.repository.SupplierRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 
 import java.util.Optional;
@@ -72,14 +74,11 @@ public class SupplierController {
 
     // Show form for editing existing supplier
     @GetMapping("/{id}")
-    public String showEditForm(@PathVariable Long id, Model model) {
-        Optional<Supplier> supplier = supplierRepository.findById(id);
-        if (supplier.isPresent()) {
-            model.addAttribute("supplier", supplier.get());
-            return "supplier_form";
-        } else {
-            return "redirect:/suppliers";
-        }
+    public String viewSupplier(Model model, @PathVariable Long id) {
+        Supplier supplier = supplierRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+        model.addAttribute("supplier", supplier);
+        return "fragments/supplier_form";
     }
 
     // Save or update supplier

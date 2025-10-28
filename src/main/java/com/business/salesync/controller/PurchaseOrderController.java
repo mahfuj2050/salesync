@@ -8,14 +8,18 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.business.salesync.dto.PurchaseOrderDTO;
 import com.business.salesync.dto.PurchaseOrderItemDTO;
+import com.business.salesync.models.Payment;
 import com.business.salesync.models.Product;
 import com.business.salesync.models.PurchaseOrder;
+import com.business.salesync.models.PurchaseOrder.PaymentStatus;
 import com.business.salesync.models.PurchaseOrderItem;
 import com.business.salesync.models.Supplier;
+import com.business.salesync.repository.PaymentRepository;
 import com.business.salesync.repository.ProductRepository;
 import com.business.salesync.repository.PurchaseOrderItemRepository;
 import com.business.salesync.repository.PurchaseOrderRepository;
 import com.business.salesync.repository.SupplierRepository;
+import com.business.salesync.service.FinancialAccountService;
 import com.business.salesync.service.PONumberService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -29,6 +33,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 @Controller
 @RequestMapping("/purchase")
@@ -39,19 +45,28 @@ public class PurchaseOrderController {
     private final PurchaseOrderItemRepository purchaseOrderItemRepo;
     private final SupplierRepository supplierRepo;
     private final ProductRepository productRepo;
-    
-    @Autowired
-    private PONumberService poNumberService;
+    private final PaymentRepository paymentRepo;
+    private final PaymentController paymentController;
+    private final FinancialAccountService financialAccountService;
+    private final PONumberService poNumberService;
 
     // =======================
     // 1️⃣ List all purchase orders
     // =======================
     @GetMapping
-    public String listPurchaseOrders(Model model) {
+    public String listPurchaseOrders(Model model) throws JsonProcessingException {
         List<PurchaseOrderDTO> orders = purchaseOrderRepo.findAll()
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+
+        // Convert items to JSON string for Thymeleaf
+        ObjectMapper objectMapper = new ObjectMapper();
+        for (PurchaseOrderDTO order : orders) {
+            // serialize the items list as JSON
+            String itemsJson = objectMapper.writeValueAsString(order.getItems());
+            order.setItemsJson(itemsJson); // make sure PurchaseOrderDTO has itemsJson field
+        }
 
         model.addAttribute("orders", orders);
         return "fragments/purchases";
@@ -121,15 +136,16 @@ public class PurchaseOrderController {
     // 3️⃣ Save purchase order with VAT, discount, and stock update
     // =======================
     @PostMapping("/save")
-    public String savePurchaseOrder(@ModelAttribute PurchaseOrder purchaseOrder,
-                                    @RequestParam List<Long> productIds,
-                                    @RequestParam List<Integer> quantities,
-                                    @RequestParam List<Double> purchasePrices,
-                                    @RequestParam List<Double> sellingPrices,
-                                    @RequestParam(required = false) List<Double> vatPercents,
-                                    @RequestParam(required = false, defaultValue = "0") double discount,
-                                    @RequestParam(required = false, defaultValue = "0") double amountPaid,
-                                    RedirectAttributes redirectAttributes) {
+    public String savePurchaseOrder(
+            @ModelAttribute PurchaseOrder purchaseOrder,
+            @RequestParam List<Long> productIds,
+            @RequestParam List<Integer> quantities,
+            @RequestParam List<Double> purchasePrices,
+            @RequestParam List<Double> sellingPrices,
+            @RequestParam(required = false) List<Double> vatPercents,
+            @RequestParam(required = false, defaultValue = "0") double discount,
+            @RequestParam(required = false, defaultValue = "0") double amountPaid,
+            RedirectAttributes redirectAttributes) {
 
         // ✅ Validation
         if (productIds == null || productIds.isEmpty()) {
@@ -137,8 +153,8 @@ public class PurchaseOrderController {
             return "redirect:/purchase/new";
         }
 
-        // Validate all required parameters
-        if (quantities.size() != productIds.size() || purchasePrices.size() != productIds.size() || 
+        if (quantities.size() != productIds.size() ||
+            purchasePrices.size() != productIds.size() ||
             sellingPrices.size() != productIds.size()) {
             redirectAttributes.addFlashAttribute("error", "Invalid product data submitted!");
             return "redirect:/purchase/new";
@@ -151,13 +167,11 @@ public class PurchaseOrderController {
         purchaseOrder.setUpdateDate(LocalDate.now());
         purchaseOrder.setStatus("RECEIVED");
 
-        // ✅ Save PO first (without financial details)
-        PurchaseOrder savedPo = purchaseOrderRepo.save(purchaseOrder);
-
         List<PurchaseOrderItem> items = new ArrayList<>();
         double totalAmount = 0;
         double totalVatAmount = 0;
 
+        // ✅ Create items & update stock
         for (int i = 0; i < productIds.size(); i++) {
             Long productId = productIds.get(i);
             Integer qty = quantities.get(i);
@@ -168,10 +182,8 @@ public class PurchaseOrderController {
             Product product = productRepo.findById(productId).orElse(null);
             if (product == null || qty <= 0) continue;
 
-            // Validate prices
             if (purchasePrice <= 0 || sellingPrice <= 0) {
-                redirectAttributes.addFlashAttribute("error", 
-                    "Invalid prices for product: " + product.getName());
+                redirectAttributes.addFlashAttribute("error", "Invalid prices for product: " + product.getName());
                 return "redirect:/purchase/new";
             }
 
@@ -179,7 +191,7 @@ public class PurchaseOrderController {
             double vatAmount = subtotal * vatPercent / 100.0;
 
             PurchaseOrderItem item = PurchaseOrderItem.builder()
-                    .purchaseOrder(savedPo)
+                    .purchaseOrder(purchaseOrder)
                     .product(product)
                     .quantity(qty)
                     .purchasePrice(purchasePrice)
@@ -193,35 +205,96 @@ public class PurchaseOrderController {
             totalAmount += subtotal;
             totalVatAmount += vatAmount;
 
-            // ✅ Update product stock & pricing with WEIGHTED AVERAGE COST
+            // Update product stock & pricing
             updateProductStockAndCost(product, qty, purchasePrice, sellingPrice);
         }
 
-        // ✅ Save all purchase items
-        purchaseOrderItemRepo.saveAll(items);
-
-        // ✅ Final calculations
+        // ✅ Calculate totals
         double totalWithVat = totalAmount + totalVatAmount;
         double grandTotal = totalWithVat - discount;
         double amountDue = grandTotal - amountPaid;
 
-        // Update the saved PO with financial details (DO NOT set items collection)
-        savedPo.setTotalAmount(totalAmount);
-        savedPo.setVatAmount(BigDecimal.valueOf(totalVatAmount));
-        savedPo.setDiscount(discount);
-        savedPo.setGrandTotal(grandTotal);
-        savedPo.setAmountPaid(amountPaid);
-        savedPo.setAmountDue(amountDue);
-        savedPo.setRemarks("VAT: " + totalVatAmount);
-        // REMOVE THIS LINE: savedPo.setItems(items); // This causes the orphan removal error
-        savedPo.updatePaymentStatus(amountPaid);
+        // Set financial info in PO
+        purchaseOrder.setTotalAmount(totalAmount);
+        purchaseOrder.setVatAmount(BigDecimal.valueOf(totalVatAmount));
+        purchaseOrder.setDiscount(discount);
+        purchaseOrder.setGrandTotal(grandTotal);
+        purchaseOrder.setAmountPaid(amountPaid);
+        purchaseOrder.setAmountDue(amountDue);
+        purchaseOrder.setRemarks("VAT: " + totalVatAmount);
+        purchaseOrder.updatePaymentStatus(amountPaid);
 
-        purchaseOrderRepo.save(savedPo);
+        // ✅ Save PO
+        PurchaseOrder savedPo = purchaseOrderRepo.save(purchaseOrder);
 
-        redirectAttributes.addFlashAttribute("success", 
-            "Purchase order " + poNumber + " saved successfully!");
+        // ✅ Save items
+        items.forEach(item -> item.setPurchaseOrder(savedPo));
+        purchaseOrderItemRepo.saveAll(items);
+
+     // ✅ Save payment via universal helper
+     // Fetch supplier name
+        Supplier supplier = purchaseOrder.getSupplier(); // fetches Supplier entity
+        String entityName = (supplier != null) ? supplier.getSupplierName() : "Unknown Supplier";
+
+        // ✅ Save payment via universal helper
+        if (amountPaid > 0) {
+            paymentController.savePaymentRecord(
+                savedPo.getId(),                          // reference ID
+                Payment.RefType.PURCHASE_ORDER,           // ref type
+                BigDecimal.valueOf(totalAmount),          // total amount
+                BigDecimal.valueOf(totalVatAmount),       // total VAT
+                BigDecimal.valueOf(discount),             // discount
+                BigDecimal.valueOf(grandTotal),           // grand total
+                BigDecimal.valueOf(amountPaid),           // amount paid
+                BigDecimal.valueOf(amountDue),            // amount due
+                entityName                                // entity name (Supplier)
+            );
+        }
+
+     // ✅ Save payment via universal FinancialAccountService
+        if (amountPaid > 0) {
+            Supplier suppliers = purchaseOrder.getSupplier();
+            String entityNames = (suppliers != null) ? suppliers.getSupplierName() : "Unknown Supplier";
+
+            // Decide which account is being used for payment
+            String paymentMethod = "Cash"; // You can fetch from formData or PO input
+            String finAccName = switch (paymentMethod) {
+                case "Cash" -> "Cash at Hand";
+                case "bKash" -> "bKash";
+                case "Bank Transfer" -> "Pubali Bank PLC"; // choose appropriate bank account
+                default -> "Cash at Hand";
+            };
+            
+            PaymentStatus poPaymentStatus;
+            if (amountPaid <= 0) {
+                poPaymentStatus = PaymentStatus.PENDING;
+            } else if (amountPaid < grandTotal) {
+                poPaymentStatus = PaymentStatus.PARTIALLY_PAID;
+            } else {
+                poPaymentStatus = PaymentStatus.PAID;
+            }
+
+
+            financialAccountService.recordTransaction(
+                    finAccName,
+                    paymentMethod,                 // finAccType
+                    amountPaid,                    // transaction amount
+                    "CASH_OUT",                    // money going out to supplier
+                    "PURCHASE_ORDER",              // refType
+                    "SUPPLIER",                    // entityType
+                    entityNames,                    // supplier name
+                    savedPo.getPurchaseOrderNo(),  // trnRefNo
+                    savedPo.getId(),               // refId
+                    "Purchase Payment",            // remarks
+                    poPaymentStatus.name()         // paymentStatus as String
+            );
+        }
+
+
+        redirectAttributes.addFlashAttribute("success", "Purchase order " + poNumber + " saved successfully!");
         return "redirect:/purchase";
     }
+
 
     /**
      * Update product stock and calculate weighted average cost
@@ -253,6 +326,42 @@ public class PurchaseOrderController {
         
         productRepo.save(product);
     }
+    
+    /**
+     * Save a Payment record for a Purchase Order
+     */
+    private Payment savePurchasePayment(PurchaseOrder purchaseOrder, 
+                                       double totalAmount, 
+                                       double totalVatAmount, 
+                                       double discount, 
+                                       double grandTotal, 
+                                       double amountPaid, 
+                                       double amountDue) {
+
+        if (amountPaid <= 0) return null; // no payment to save
+
+        Payment payment = Payment.builder()
+                .refId(purchaseOrder.getId())
+                .refType(Payment.RefType.PURCHASE_ORDER)
+                .totalAmount(BigDecimal.valueOf(totalAmount))
+                .totalVat(BigDecimal.valueOf(totalVatAmount))
+                .discount(BigDecimal.valueOf(discount))
+                .grandTotal(BigDecimal.valueOf(grandTotal))
+                .amountPaid(BigDecimal.valueOf(amountPaid))
+                .amountDue(BigDecimal.valueOf(amountDue))
+                .paidAmount(BigDecimal.valueOf(amountPaid))
+                .paymentStatus(Payment.PaymentStatus.PENDING) // will update next
+                .fromAccount(null)
+                .remarks("Payment for PO " + purchaseOrder.getPurchaseOrderNo())
+                .paymentDate(LocalDateTime.now())
+                .build();
+
+        // update payment status
+        payment.updatePaymentStatus(BigDecimal.valueOf(amountPaid));
+
+        return paymentRepo.save(payment);
+    }
+
 
     // =======================
     // 4️⃣ View purchase order

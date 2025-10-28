@@ -15,6 +15,12 @@ import java.util.List;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
+	
+	 // Find payments linked to a specific customer
+	List<Payment> findByCustomerId(Long customerId);
+	
+	   // Find payments linked to a specific supplier
+    List<Payment> findBySupplierId(Long supplierId);
 
     // Find payments by reference type
     Page<Payment> findByRefType(Payment.RefType refType, Pageable pageable);

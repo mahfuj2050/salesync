@@ -26,6 +26,10 @@ public class Customer {
 	@NotBlank
 	@Column(name = "phone_number", nullable = false)
 	private String phoneNumber;
+	
+	@NotBlank
+	@Column(name = "email", nullable = false)
+	private String email;
 
 	@NotBlank
 	@Column(name = "address", nullable = false)

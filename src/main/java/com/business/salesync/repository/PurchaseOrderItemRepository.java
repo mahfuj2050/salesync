@@ -10,6 +10,7 @@ import java.util.List;
 
 @Repository
 public interface PurchaseOrderItemRepository extends JpaRepository<PurchaseOrderItem, Long> {
+	
 
     // Find all items for a specific purchase order
     List<PurchaseOrderItem> findByPurchaseOrderId(Long purchaseOrderId);

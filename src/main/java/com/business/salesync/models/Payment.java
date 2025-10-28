@@ -13,6 +13,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -77,6 +79,21 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     @Column(name = "ref_type", length = 30, nullable = false)
     private RefType refType;
+    
+    @Column(name = "entity_type", length = 50)
+    private String entityType; // e.g., "Customer" or "Supplier"
+    
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+    
+    @ManyToOne
+    @JoinColumn(name = "supplier_id")
+    private Supplier supplier;
+
+    @Column(name = "payment_type", length = 50)
+    private String paymentType; // e.g., "Revenue" or "Expense"
+
 
     @Column(name = "remarks", length = 255)
     private String remarks;
