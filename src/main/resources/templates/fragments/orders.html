@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html layout:decorate="~{layout}" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <title>Orders Management</title>
+<html layout:decorate="~{layout}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<head>
+    <title>Sales List</title>
+    
   <style>
     .summary-card {
       transition: transform 0.2s;
@@ -45,7 +47,7 @@
 
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="h3"><i class="bi bi-receipt-cutoff"></i> Orders Management</h1>
+      <h1 class="h3"><i class="bi bi-receipt-cutoff"></i> Sale Order Management</h1>
       <a sec:authorize="hasRole('ADMIN')" th:href="@{/pos}" class="btn btn-primary">
         <i class="bi bi-plus-circle"></i> Create New Order
       </a>
@@ -161,10 +163,10 @@
           
           <div class="col-md-1 d-flex align-items-end">
             <div class="btn-group w-100">
-              <button type="submit" class="btn btn-outline-primary" title="Apply Filters">
+              <button type="submit" class="btn btn-outline-primary" title="Apply Filters">Filter
                 <i class="bi bi-funnel"></i>
               </button>
-              <a th:href="@{/orders}" class="btn btn-outline-secondary" title="Clear Filters">
+              <a th:href="@{/orders}" class="btn btn-outline-secondary" title="Clear Filters">Clear
                 <i class="bi bi-arrow-clockwise"></i>
               </a>
             </div>
@@ -187,119 +189,81 @@
     <div class="card">
       <div class="card-body">
         <div class="table-responsive">
-          <table class="table table-bordered table-hover align-middle" id="ordersTable">
+
+        <table class="table table-bordered table-hover" id="ordersTable">
             <thead class="table-dark">
-              <tr>
-                <th class="text-center">
-                  <a th:href="@{/orders(size=${currentSize}, page=0, sort='invoiceNumber', direction=${currentDirection == 'asc' ? 'desc' : 'asc'}, search=${currentSearch}, paymentStatus=${currentPaymentStatus}, dateRange=${currentDateRange}, fromDate=${fromDate}, toDate=${toDate})}" 
-                     class="text-white text-decoration-none">
-                    Invoice No.
-                    <i th:if="${currentSort == 'invoiceNumber'}" 
-                       th:class="'bi bi-arrow-' + (${currentDirection == 'asc'} ? 'up' : 'down')"></i>
-                    <i th:if="${currentSort != 'invoiceNumber'}" class="bi bi-arrow-down-up"></i>
-                  </a>
-                </th>
-                <th>Customer</th>
-                <th class="text-center">
-                  <a th:href="@{/orders(size=${currentSize}, page=0, sort='dateOrdered', direction=${currentDirection == 'asc' ? 'desc' : 'asc'}, search=${currentSearch}, paymentStatus=${currentPaymentStatus}, dateRange=${currentDateRange}, fromDate=${fromDate}, toDate=${toDate})}" 
-                     class="text-white text-decoration-none">
-                    Date
-                    <i th:if="${currentSort == 'dateOrdered'}" 
-                       th:class="'bi bi-arrow-' + (${currentDirection == 'asc'} ? 'up' : 'down')"></i>
-                    <i th:if="${currentSort != 'dateOrdered'}" class="bi bi-arrow-down-up"></i>
-                  </a>
-                </th>
-                <th class="text-end">Total Amount</th>
-                <th class="text-end">Amount Paid</th>
-                <th class="text-end">Amount Due</th>
-                <th class="text-center">Payment Status</th>
-                <th class="text-center">Actions</th>
-              </tr>
+                <tr>
+                    <th class="text-center">Invoice No.</th>
+                    <th class="text-center">Customer Name</th>
+                    <th class="text-center">Date</th>
+                    <th class="text-center">Total Amount</th>
+                    <th class="text-center">Amount Paid</th>
+                    <th class="text-center">Amount Due</th>
+                    <th class="text-center">Payment Status</th>
+                    <th class="text-center">Actions</th>
+                </tr>
             </thead>
             <tbody>
-              <tr th:each="order : ${order_page.content}">
-                <td class="text-center">
-                  <strong th:text="${order.invoiceNumber}"></strong>
-                </td>
-                <td>
-                  <div>
-                    <strong th:text="${order.customer?.name ?: 'Walk-in Customer'}"></strong>
-                    <br>
-                    <small class="text-muted" th:if="${order.customer?.phoneNumber}" th:text="${order.customer.phoneNumber}"></small>
-                  </div>
-                </td>
-                <td class="text-center">
-                  <span th:text="${#temporals.format(order.dateOrdered, 'dd MMM yyyy')}"></span>
-                  <br>
-                  <small class="text-muted" th:text="${#temporals.format(order.dateOrdered, 'hh:mm a')}"></small>
-                </td>
-                <td class="text-end">
-                  <strong th:text="${#numbers.formatDecimal(order.totalAmount, 1, 2, 'POINT')}"></strong>
-                </td>
-                <td class="text-end text-success">
-                  <span th:text="${#numbers.formatDecimal(order.amountPaid, 1, 2, 'POINT')}"></span>
-                </td>
-                <td class="text-end" th:classappend="${order.amountDue > 0 ? 'text-danger' : 'text-muted'}">
-                  <span th:text="${#numbers.formatDecimal(order.amountDue, 1, 2, 'POINT')}"></span>
-                </td>
-                <td class="text-center">
-                  <span th:if="${order.amountDue == 0}" class="badge bg-success status-badge">
-                    <i class="bi bi-check-circle"></i> Paid
-                  </span>
-                  <span th:if="${order.amountDue > 0 and order.amountPaid > 0}" class="badge bg-warning status-badge">
-                    <i class="bi bi-clock"></i> Partial
-                  </span>
-                  <span th:if="${order.amountDue > 0 and order.amountPaid == 0}" class="badge bg-danger status-badge">
-                    <i class="bi bi-x-circle"></i> Unpaid
-                  </span>
-                </td>
-                <td class="text-center">
-                  <div class="btn-group btn-group-sm action-buttons">
+                <tr th:each="order : ${order_page.content}">
+                    <td th:text="${order.invoiceNumber}"></td>
+                    <td th:text="${order.customer?.name}"></td>
+                    <td th:text="${#temporals.format(order.dateOrdered, 'yyyy-MM-dd')}"></td>
+                    <td class="text-end">
+	                  <strong th:text="${#numbers.formatDecimal(order.totalAmount, 1, 2, 'POINT')}"></strong>
+	                </td>
+	                <td class="text-end text-success">
+	                  <span th:text="${#numbers.formatDecimal(order.amountPaid, 1, 2, 'POINT')}"></span>
+	                </td>
+	                <td class="text-end" th:classappend="${order.amountDue > 0 ? 'text-danger' : 'text-muted'}">
+	                  <span th:text="${#numbers.formatDecimal(order.amountDue, 1, 2, 'POINT')}"></span>
+	                </td>
+	                <td class="text-center">
+	                  <span th:if="${order.amountDue == 0}" class="badge bg-success status-badge">
+	                    <i class="bi bi-check-circle"></i> Paid
+	                  </span>
+	                  <span th:if="${order.amountDue > 0 and order.amountPaid > 0}" class="badge bg-warning status-badge">
+	                    <i class="bi bi-clock"></i> Partial
+	                  </span>
+	                  <span th:if="${order.amountDue > 0 and order.amountPaid == 0}" class="badge bg-danger status-badge">
+	                    <i class="bi bi-x-circle"></i> Unpaid
+	                  </span>
+	                </td>
+                    <td class="text-center">
+                  		<div class="btn-group btn-group-sm action-buttons">
+						    <a th:href="@{/order/{id}(id=${order.id})}" class="btn btn-primary btn-sm">
+						        <i class="fas fa-edit"></i>
+						    </a>
+						
+						    <button type="button" 
+						            th:attr="data-id=${order.id}" 
+						            class="btn btn-danger btn-sm" 
+						            data-bs-toggle="modal" 
+						            data-bs-target="#deleteConfirmationModal">
+						        <i class="fas fa-trash"></i>
+						    </button>
+						
+						    <button type="button" 
+						            th:attr="data-id=${order.id}" 
+						            class="btn btn-info btn-sm view-order-details" 
+						            data-bs-toggle="modal" 
+						            data-bs-target="#viewOrderModal">
+						        <i class="fas fa-eye"></i>
+						    </button>
+						
+						   <!-- Receive Payment button, only if amountDue != 0 -->
+							<button type="button"
+							        th:if="${order.amountDue != 0}"
+							        th:attr="data-id=${order.id}, data-invoice=${order.invoiceNumber}, data-grandtotal=${order.totalAmount}, data-amountdue=${order.amountDue}"
+							        class="btn btn-success btn-sm receive-payment-btn"
+							        data-bs-toggle="modal"
+							        data-bs-target="#paymentModal">
+							    <i class="fas fa-money-bill-wave"></i>
+							</button>
+							</div>
+						</td>
+                </tr>
+      
 
-					<!-- View Details Button -->
-					<button type="button"
-					        th:attr="data-id=${order.id}"
-					        class="btn btn-info view-order-details"
-					        data-bs-toggle="modal" 
-					        data-bs-target="#viewOrderModal"
-					        title="View Invoice">
-					  <i class="bi bi-eye"></i>
-					</button>
-					
-					<!-- Receive Payment (only if amount due) -->
-					<button type="button"
-					        th:if="${order.amountDue != 0}"
-					        th:attr="data-id=${order.id}, data-invoice=${order.invoiceNumber}, data-grandtotal=${order.totalAmount}, data-amountdue=${order.amountDue}"
-					        class="btn btn-success receive-payment-btn"
-					        data-bs-toggle="modal"
-					        data-bs-target="#paymentModal"
-					        title="Receive Payment">
-					  <i class="bi bi-cash-coin"></i>
-					</button>
-                    
-                    <!-- Edit -->
-                    <a sec:authorize="hasRole('ADMIN')" 
-                       th:href="@{/order/{id}(id=${order.id})}" 
-                       class="btn btn-primary"
-                       title="Edit Order">
-                      <i class="bi bi-pencil"></i>
-                    </a>
-                    
-					                    
-                    <!-- Delete -->
-                    <button sec:authorize="hasRole('ADMIN')" 
-                            type="button" 
-                            th:attr="data-id=${order.id}" 
-                            class="btn btn-danger" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#deleteConfirmationModal"
-                            title="Delete Order">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              
               <tr th:if="${#lists.isEmpty(order_page.content)}">
                 <td colspan="8" class="text-center text-muted py-5">
                   <i class="bi bi-inbox" style="font-size: 3rem;"></i>
@@ -375,406 +339,329 @@
       </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <form th:action="@{/orders/delete}" method="post">
-          <input type="hidden" name="id" value="">
-          <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-              <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Delete Order</h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-              <p>Are you sure you want to delete this order?</p>
-              <p class="text-danger"><strong>This action cannot be undone!</strong></p>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" class="btn btn-danger">Delete Order</button>
-            </div>
-          </div>
-        </form>
+
+      <!-- View Order Details Modal -->
+<!-- View Order Invoice Modal -->
+<div class="modal fade" id="viewOrderModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-sm">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="fas fa-receipt me-2"></i>Invoice</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-    </div>
 
-    <!-- View Order Invoice Modal -->
-    <div class="modal fade" id="viewOrderModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-sm">
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title"><i class="bi bi-receipt me-2"></i>Invoice</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      <div class="modal-body p-4">
+        <!-- Header with logo -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <!-- <img src="https://logodix.com/logo/2111800.jpg" alt="Logo" style="height:80px;"> -->
+            <p class="mb-0 fw-bold">Mubin Enterprise</p>
+            <p class="mb-0">598,Kunia Targas</p>
+            <p class="mb-0">Block-B,Word-37</p>
+            <p class="mb-0">Tongi,Gazipur</p>
+            <p class="mb-0">Phone: +01819817473</p>
           </div>
+          <div class="text-end">
+            <h6 class="text-muted">Invoice #</h6>
+            <p id="modalInvoiceNumber" class="fw-bold mb-1"></p>
 
-          <div class="modal-body p-4">
-            <!-- Header with logo -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <div>
-                <p class="mb-0 fw-bold fs-5">Mubin Enterprise</p>
-                <p class="mb-0">598, Kunia Targas</p>
-                <p class="mb-0">Block-B, Word-37</p>
-                <p class="mb-0">Tongi, Gazipur</p>
-                <p class="mb-0">Phone: +01819817473</p>
-              </div>
-              <div class="text-end">
-                <h6 class="text-muted mb-1">Invoice #</h6>
-                <p id="modalInvoiceNumber" class="fw-bold mb-2 fs-5"></p>
-                <h6 class="text-muted mb-1">Date</h6>
-                <p id="modalOrderDate" class="mb-0"></p>
-              </div>
-            </div>
-
-            <!-- Customer Info -->
-            <div class="mb-4 p-3 bg-light rounded">
-              <h6 class="text-muted mb-2">Bill To:</h6>
-              <p id="modalCustomerName" class="mb-1 fw-bold"></p>
-              <p id="modalCustomerPhone" class="mb-1"></p>
-              <p id="modalCustomerAddress" class="mb-0"></p>
-            </div>
-
-            <!-- Products Table -->
-            <table class="table table-bordered table-hover align-middle">
-              <thead class="table-light text-center">
-                <tr>
-                  <th>Product</th>
-                  <th>Qty</th>
-                  <th>Unit Price</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody id="orderDetailsBody"></tbody>
-              <tfoot>
-                <tr class="table-light">
-                  <th colspan="3" class="text-end">Grand Total</th>
-                  <th id="modalTotalAmount" class="text-center"></th>
-                </tr>
-              </tfoot>
-            </table>
-
-            <!-- Payment Summary Section -->
-            <div class="mt-4 border-top pt-3">
-              <div class="row mb-2">
-                <div class="col text-end fw-bold">Amount Paid:</div>
-                <div class="col-auto text-end text-success" id="modalAmountPaid">0.00</div>
-              </div>
-              <div class="row mb-2">
-                <div class="col text-end fw-bold">Amount Due:</div>
-                <div class="col-auto text-end text-danger" id="modalAmountDue">0.00</div>
-              </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="mt-4 text-muted text-center small">
-              Thank you for your purchase! Contact mahfuj2050@gmail.com for questions.
-            </div>
+            <h6 class="text-muted">Date</h6>
+            <p id="modalOrderDate" class="mb-0"></p>
           </div>
-          
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" onclick="window.print()">
-              <i class="bi bi-printer"></i> Print Invoice
-            </button>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="mb-4">
+          <h6 class="text-muted">Bill To:</h6>
+          <p id="modalCustomerName" class="mb-1 fw-bold"></p>
+          <p id="modalCustomerPhone" class="mb-1"></p>
+          <p id="modalCustomerAddress" class="mb-0"></p>
+        </div>
+
+        <!-- Products Table -->
+        <table class="table table-bordered table-hover align-middle">
+          <thead class="table-light text-center">
+            <tr>
+              <th>Product</th>
+              <th>Qty</th>
+              <th>Unit Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="orderDetailsBody"></tbody>
+          <tfoot>
+            <tr>
+              <th colspan="3" class="text-end">Grand Total</th>
+              <th id="modalTotalAmount" class="text-center"></th>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- 💵 Payment Summary Section -->
+        <div class="mt-4 border-top pt-3">
+          <div class="row mb-2">
+            <div class="col text-end fw-bold">Amount Paid:</div>
+            <div class="col-auto text-end" id="modalAmountPaid">0.00</div>
           </div>
+          <div class="row mb-2">
+            <div class="col text-end fw-bold">Amount Due:</div>
+            <div class="col-auto text-end text-danger" id="modalAmountDue">0.00</div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-4 text-muted text-center small">
+          Thank you for your purchase! Contact mahfuj2050@gmail.com for questions.
         </div>
       </div>
     </div>
-
-    <!-- Payment Modal -->
-    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <form id="receivePaymentForm">
-          <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-              <h5 class="modal-title" id="paymentModalLabel">
-                <i class="bi bi-cash-coin me-2"></i>Receive Payment
-              </h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <input type="hidden" id="paymentOrderId">
-              <input type="hidden" id="paymentInvoiceNumber">
-
-              <div class="mb-3">
-                <label class="form-label fw-bold">Invoice Number</label>
-                <input type="text" id="displayInvoiceNumber" class="form-control" readonly>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label fw-bold">Grand Total</label>
-                <input type="text" id="modalGrandTotal" class="form-control" readonly>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label fw-bold">Current Due</label>
-                <input type="text" id="currentAmountDue" class="form-control text-danger" readonly>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label fw-bold">Amount to Pay <span class="text-danger">*</span></label>
-                <input type="number" id="amountPaidInput" class="form-control" min="0" step="0.01" required>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label fw-bold">Remaining Due</label>
-                <input type="text" id="remainingDue" class="form-control text-info" readonly>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" class="btn btn-success">
-                <i class="bi bi-check-circle"></i> Confirm Payment
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-
   </div>
+</div>
 
-  <!-- JavaScript -->
+
+
+<!-- 💳 Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="receivePaymentForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="paymentModalLabel">Receive Payment</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="paymentOrderId">
+          <input type="text" id="paymentInvoiceNumber">
+
+          <div class="mb-3">
+            <label class="form-label">Grand Total</label>
+            <input type="text" id="modalGrandTotal" class="form-control" readonly>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Current Due</label>
+            <input type="text" id="currentAmountDue" class="form-control" readonly>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Amount Paid</label>
+            <input type="number" id="amountPaidInput" class="form-control" min="0" step="0.01" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Remaining Due</label>
+            <input type="text" id="remainingDue" class="form-control" readonly>
+          </div>
+          
+         <div class="mb-3">
+		  <label class="form-label">Payment Method</label>
+		  <select id="paymentMethodSelect" class="form-select">
+		      <option value="">-- Select Method --</option>
+		      <option value="CASH">Cash</option>
+		      <option value="MFS">MFS</option>
+		      <option value="BANK">Bank Transfer</option>
+		  </select>
+		</div>
+		
+		<div class="mb-3">
+		  <label class="form-label">Account</label>
+		  <select id="finAccSelect" class="form-select">
+		      <option value="">-- Select Account --</option>
+		      <!-- Options will be loaded dynamically -->
+		  </select>
+		</div>
+		
+		<!-- Hidden inputs for backend submission -->
+		<input type="hidden" name="paymentMethod" id="paymentMethodInput">
+		<input type="hidden" name="finAccName" id="finAccNameInput">
+          
+          
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">Confirm Payment</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
 <script>
-$(document).ready(function() {
-  console.log('Orders page loaded');
-
-  // ==========================================
-  // DELETE MODAL HANDLER
-  // ==========================================
-  $('#deleteConfirmationModal').on('show.bs.modal', function (event) {
-    const button = $(event.relatedTarget);
-    const orderId = button.data('id');
-    $(this).find('input[name="id"]').val(orderId);
-  });
-
-  // ==========================================
-  // VIEW ORDER MODAL - PROGRAMMATIC HANDLING
-  // ==========================================
-  $(document).on("click", ".view-order-details", function () {
+$(document).on("click", ".view-order-details", function () {
     const orderId = $(this).data('id');
-    const viewModal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
-    
-    // Clear previous data and show loading
-    $('#orderDetailsBody').html('<tr><td colspan="4" class="text-center">Loading...</td></tr>');
-    $('#modalTotalAmount').text('...');
-    $('#modalCustomerName').text('Loading...');
+    $('#orderDetailsBody').empty();
+    $('#modalTotalAmount').text('');
+    $('#modalCustomerName').text('');
     $('#modalCustomerPhone').text('');
     $('#modalCustomerAddress').text('');
-    $('#modalInvoiceNumber').text('');
+    $('#modalOrderId').text(orderId);
     $('#modalOrderDate').text('');
-    $('#modalAmountPaid').text('0.00');
-    $('#modalAmountDue').text('0.00');
-    
-    // Show modal immediately
-    viewModal.show();
-    
-    // Fetch order details
+
     $.ajax({
-      url: '/order/details/' + orderId,
-      method: 'GET',
-      success: function (data) {
-        console.log('Order data received:', data);
-        
-        let total = 0;
-        
-        // Format date properly
-        const orderDate = new Date(data.orderDate);
-        const formattedDate = orderDate.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        });
-        
-        // Populate header info
-        $("#modalInvoiceNumber").text(data.invoiceNumber || 'N/A');
-        $('#modalOrderDate').text(formattedDate);
-        
-        // Populate customer info
-        $('#modalCustomerName').text(data.customerName || 'Walk-in Customer');
-        $('#modalCustomerPhone').text(data.customerPhone || 'N/A');
-        $('#modalCustomerAddress').text(data.customerAddress || 'N/A');
+        url: '/order/details/' + orderId,
+        method: 'GET',
+        success: function (data) {
+            let total = 0;
+            $("#modalInvoiceNumber").text(data.invoiceNumber);
+            $('#modalCustomerName').text(data.customerName);
+            $('#modalCustomerPhone').text(data.customerPhone);
+            $('#modalCustomerAddress').text(data.customerAddress);
+            $('#modalOrderDate').text(data.orderDate);
 
-        // Clear and populate items
-        $('#orderDetailsBody').empty();
-        
-        if (data.items && data.items.length > 0) {
-          data.items.forEach(function (item) {
-            const itemTotal = item.quantity * item.price;
-            total += itemTotal;
+            data.items.forEach(function (item) {
+                const itemTotal = item.quantity * item.price;
+                total += itemTotal;
 
-            $('#orderDetailsBody').append(`
-              <tr class="text-center">
-                <td class="text-start">${item.productName}</td>
-                <td>${item.quantity}</td>
-                <td>${parseFloat(item.price).toFixed(2)}</td>
-                <td>${itemTotal.toFixed(2)}</td>
-              </tr>
-            `);
-          });
-        } else {
-          $('#orderDetailsBody').append(`
-            <tr>
-              <td colspan="4" class="text-center text-muted">No items found</td>
-            </tr>
-          `);
+                $('#orderDetailsBody').append(`
+                    <tr class="text-center">
+                        <td class="text-start">${item.productName}</td>
+                        <td>${item.quantity}</td>
+                        <td>${parseFloat(item.price).toFixed(2)}</td>
+                        <td>${itemTotal.toFixed(2)}</td>
+                    </tr>
+                `);
+            });
+
+
+
+            $('#modalTotalAmount').text(total.toFixed(2));
+
+            // ✅ FIX HERE — use data.amountPaid and data.amountDue
+            $("#modalAmountPaid").text(parseFloat(data.amountPaid).toFixed(2));
+            $("#modalAmountDue").text(parseFloat(data.amountDue).toFixed(2));
+
+            $('#viewOrderModal').modal('show');
         }
-
-        // Populate totals
-        $('#modalTotalAmount').text(total.toFixed(2));
-        $("#modalAmountPaid").text(parseFloat(data.amountPaid || 0).toFixed(2));
-        $("#modalAmountDue").text(parseFloat(data.amountDue || 0).toFixed(2));
-      },
-      error: function(xhr, status, error) {
-        console.error('Error loading order:', error);
-        $('#orderDetailsBody').html(`
-          <tr>
-            <td colspan="4" class="text-center text-danger">
-              <i class="bi bi-exclamation-circle"></i> Failed to load order details. Please try again.
-            </td>
-          </tr>
-        `);
-      }
     });
-  });
+});
 
-  // ==========================================
-  // PAYMENT MODAL - PROGRAMMATIC HANDLING
-  // ==========================================
-  $(document).on("click", ".receive-payment-btn", function () {
+
+$(document).on("click", ".receive-payment-btn", function () {
     const orderId = $(this).data("id");
     const invoice = $(this).data("invoice");
-    const grandTotal = parseFloat($(this).data("grandtotal")) || 0;
-    const amountDue = parseFloat($(this).data("amountdue")) || 0;
-    const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+    const grandTotal = parseFloat($(this).data("grandtotal"));
+    const amountDue = parseFloat($(this).data("amountdue"));
 
-    console.log('Payment button clicked:', { orderId, invoice, grandTotal, amountDue });
-
-    // Populate payment modal fields
     $("#paymentOrderId").val(orderId);
     $("#paymentInvoiceNumber").val(invoice);
-    $("#displayInvoiceNumber").val(invoice);
     $("#modalGrandTotal").val(grandTotal.toFixed(2));
     $("#currentAmountDue").val(amountDue.toFixed(2));
     $("#amountPaidInput").val("");
     $("#remainingDue").val(amountDue.toFixed(2));
     
-    // Show the modal
-    paymentModal.show();
-  });
+    $("#paymentMethodSelect").val("");
+    $("#finAccSelect").empty().append('<option value="">-- Select Account --</option>');
+});
 
-  // ==========================================
-  // CALCULATE REMAINING DUE - REAL-TIME
-  // ==========================================
-  $(document).on("input", "#amountPaidInput", function () {
+//------------------------
+//Step 6: Payment Method change -> load accounts dynamically
+//------------------------
+$(document).on("change", "#paymentMethodSelect", function() {
+ const type = $(this).val();
+ const accountSelect = $("#finAccSelect");
+
+ accountSelect.empty().append('<option value="">-- Select Account --</option>');
+ if (!type) return;
+
+ $.ajax({
+     url: '/accounts/by-type',
+     type: 'GET',
+     data: { type: type },
+     success: function(accounts) {
+         accounts.forEach(acc => {
+             accountSelect.append(`<option value="${acc.finAccName}">${acc.finAccName}</option>`);
+         });
+     },
+     error: function() { alert("Failed to fetch accounts for " + type); }
+ });
+});
+
+
+// 🧮 Calculate remaining due
+$(document).on("input", "#amountPaidInput", function () {
     const paid = parseFloat($(this).val()) || 0;
-    const currentDue = parseFloat($("#currentAmountDue").val()) || 0;
+    const currentDue = parseFloat($("#currentAmountDue").val());
     const remaining = Math.max(currentDue - paid, 0);
-    
     $("#remainingDue").val(remaining.toFixed(2));
-    
-    // Visual feedback
-    if (paid > currentDue) {
-      $(this).addClass("border-warning");
-      $("#remainingDue").addClass("text-warning");
-    } else {
-      $(this).removeClass("border-warning");
-      $("#remainingDue").removeClass("text-warning");
-    }
-  });
+});
 
-  // ==========================================
-  // SUBMIT PAYMENT
-  // ==========================================
-  $("#receivePaymentForm").on("submit", function (e) {
+
+$(document).on("submit", "#receivePaymentForm", function (e) {
     e.preventDefault();
 
     const orderId = $("#paymentOrderId").val();
     const amountPaid = parseFloat($("#amountPaidInput").val());
-    const currentDue = parseFloat($("#currentAmountDue").val());
+    const paymentMethod = $("#paymentMethodSelect").val();
+    const finAccName = $("#finAccSelect").val();
+    const grandTotal = $("#modalGrandTotal").val();
+    const currentDue = $("#currentAmountDue").val();
+    const remainingDue = $("#remainingDue").val();
 
-    // Validation
+    // 🧾 Log all form values for debugging
+    console.log("💰 Submitting Payment:");
+    console.log({
+        orderId,
+        amountPaid,
+        paymentMethod,
+        finAccName,
+        grandTotal,
+        currentDue,
+        remainingDue
+    });
+
     if (!amountPaid || amountPaid <= 0) {
-      alert("Please enter a valid payment amount");
-      $("#amountPaidInput").focus();
-      return;
-    }
-
-    if (amountPaid > currentDue) {
-      if (!confirm(`Payment amount (${amountPaid.toFixed(2)}) exceeds current due (${currentDue.toFixed(2)}). Continue?`)) {
+        alert("Please enter a valid amount.");
         return;
-      }
+    }
+    if (!paymentMethod) {
+        alert("Please select a payment method.");
+        return;
+    }
+    if (!finAccName) {
+        alert("Please select an account.");
+        return;
     }
 
-    // Disable button
-    const submitBtn = $(this).find('button[type="submit"]');
-    submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
-
-    // Submit payment
+    // 🔥 Submit to backend
     $.ajax({
-      url: '/pos/receivePayment',
-      method: 'POST',
-      data: { 
-        orderId: orderId, 
-        amountPaid: amountPaid 
-      },
-      success: function (response) {
-        $('#paymentModal').modal('hide');
-        alert(`Payment of ${amountPaid.toFixed(2)} received successfully!`);
-        location.reload();
-      },
-      error: function(xhr, status, error) {
-        console.error('Payment error:', error);
-        alert("Error updating payment. Please try again.");
-        submitBtn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> Confirm Payment');
-      }
+        url: "/pos/receivePayment",
+        type: "POST",
+        data: {
+            orderId: orderId,
+            amountPaid: amountPaid,
+            paymentMethod: paymentMethod,
+            finAccName: finAccName
+        },
+        success: function (res) {
+            console.log("✅ Payment saved successfully:", res);
+
+            // Update the row dynamically if table is visible
+            const row = $(`button[data-id='${orderId}']`).closest("tr");
+            if (row.length) {
+                row.find(".amount-paid").text(res.amountPaid.toFixed(2));
+                row.find(".amount-due").text(res.amountDue.toFixed(2));
+            }
+
+            // Close modal
+            const modalEl = document.getElementById("paymentModal");
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+
+            // Optionally refresh
+            location.reload();
+        },
+        error: function (xhr) {
+            console.error("❌ Payment update failed:", xhr.responseText);
+            alert("Error saving payment. Check console for details.");
+        }
     });
-  });
-
-  // ==========================================
-  // PAGE SIZE SELECTOR
-  // ==========================================
-  const pageSizeSelector = document.getElementById('pageSizeSelector');
-  if (pageSizeSelector) {
-    pageSizeSelector.addEventListener('change', function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      urlParams.set('size', this.value);
-      urlParams.set('page', '0');
-      window.location.href = '/orders?' + urlParams.toString();
-    });
-  }
-
-  // ==========================================
-  // AUTO-SUBMIT FILTERS
-  // ==========================================
-  $('select[name="paymentStatus"], select[name="dateRange"]').on('change', function() {
-    $('input[name="page"]').val('0');
-    $('#filterForm').submit();
-  });
-
-  // ==========================================
-  // SEARCH WITH DEBOUNCE
-  // ==========================================
-  let searchTimeout;
-  $('input[name="search"]').on('input', function() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      $('input[name="page"]').val('0');
-      $('#filterForm').submit();
-    }, 800);
-  });
-
-  // ==========================================
-  // DATE INPUTS
-  // ==========================================
-  $('input[name="fromDate"], input[name="toDate"]').on('change', function() {
-    const fromDate = $('input[name="fromDate"]').val();
-    const toDate = $('input[name="toDate"]').val();
-    
-    if ((fromDate && toDate) || (!fromDate && !toDate)) {
-      $('input[name="page"]').val('0');
-      $('#filterForm').submit();
-    }
-  });
-
 });
-</script></body>
+
+</script>
+
+
+    </div>
+</body>
+</html>

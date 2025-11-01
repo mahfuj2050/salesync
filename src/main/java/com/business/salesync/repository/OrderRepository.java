@@ -3,6 +3,7 @@ package com.business.salesync.repository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 //✅ CORRECT IMPORT - Use this instead
@@ -76,6 +77,10 @@ public interface OrderRepository extends JpaRepository<SalesOrder, Long> {
 
      @Query("SELECT COUNT(o) FROM SalesOrder o WHERE DATE(o.dateOrdered) = :today")
      long countTodayOrders(@Param("today") LocalDate today);
+     
+     // Add this method to bypass the @Where filter
+     @Query("SELECT o FROM SalesOrder o WHERE o.id = :id")
+     Optional<SalesOrder> findByIdIgnoreDeleted(@Param("id") Long id);
     
     
     

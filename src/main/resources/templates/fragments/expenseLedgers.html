@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Expense Ledgers</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .ledgers-container {
+            padding: 20px;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .ledgers-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .ledgers-header h2 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .ledgers-header p {
+            margin: 5px 0;
+            opacity: 0.9;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .stat-icon.total {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .stat-icon.active {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+        
+        .stat-icon.categories {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+        
+        .stat-content {
+            flex: 1;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .filter-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-reset {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-reset:hover {
+            background: #5a6268;
+        }
+        
+        .table-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            padding: 20px 25px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .ledgers-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .ledgers-table thead {
+            background: #f8f9fa;
+        }
+        
+        .ledgers-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+        
+        .ledgers-table td {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
+        }
+        
+        .ledgers-table tbody tr:hover {
+            background: #f8f9fa;
+            transition: background 0.2s;
+        }
+        
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .badge-secondary {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .btn-view {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-view:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+        
+        .btn-edit {
+            background: #ffc107;
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        
+        .btn-summary {
+            background: #6f42c1;
+            color: white;
+        }
+        
+        .btn-summary:hover {
+            background: #5a359c;
+            transform: translateY(-2px);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        
+        .ledger-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-right: 10px;
+        }
+        
+        .ledger-name-cell {
+            display: flex;
+            align-items: center;
+        }
+        
+        .budget-bar {
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .budget-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+        
+        .budget-low {
+            background: #28a745;
+        }
+        
+        .budget-medium {
+            background: #ffc107;
+        }
+        
+        .budget-high {
+            background: #dc3545;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #28a745;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="ledgers-container">
+        <!-- Header -->
+        <div class="ledgers-header">
+            <h2><i class="fas fa-book"></i> Expense Ledgers</h2>
+            <p>Manage and track expense categories with budgets and approval workflows</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stat-icon total">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Ledgers</div>
+                    <div class="stat-value" id="totalLedgers">0</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon active">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Active Ledgers</div>
+                    <div class="stat-value" id="activeLedgers">0</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon categories">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Categories</div>
+                    <div class="stat-value" id="totalCategories">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-card">
+            <form id="filterForm">
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label for="filterCategory">Category</label>
+                        <select id="filterCategory" name="category" class="form-control">
+                            <option value="">All Categories</option>
+                            <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat}"></option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="filterType">Ledger Type</label>
+                        <select id="filterType" name="ledgerType" class="form-control">
+                            <option value="">All Types</option>
+                            <option th:each="type : ${ledgerTypes}" th:value="${type}" th:text="${type}"></option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="filterStatus">Status</label>
+                        <select id="filterStatus" name="status" class="form-control">
+                            <option value="">All Status</option>
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="filterFinancialYear">Financial Year</label>
+                        <select id="filterFinancialYear" name="financialYear" class="form-control">
+                            <option value="">All Years</option>
+                            <option th:each="year : ${financialYears}" th:value="${year}" th:text="${year}"></option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <button type="button" class="btn btn-reset" onclick="resetFilters()">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="openCreateForm()">
+                        <i class="fas fa-plus"></i> New Ledger
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading ledgers...</p>
+        </div>
+
+        <!-- Ledgers Table -->
+        <div class="table-card" id="tableCard">
+            <div class="table-header">
+                <h3>Ledgers List</h3>
+                <span id="ledgerCount">0 ledgers</span>
+            </div>
+            <div class="table-responsive">
+                <table class="ledgers-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Ledger</th>
+                            <th>Category</th>
+                            <th>Type</th>
+                            <th>Monthly Budget</th>
+                            <th>Approval</th>
+                            <th>Alerts</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgersTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <i class="fas fa-book"></i>
+            <h3>No Ledgers Found</h3>
+            <p>Start by creating your first expense ledger</p>
+            <button class="btn btn-success" onclick="openCreateForm()">
+                <i class="fas fa-plus"></i> Create Ledger
+            </button>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="scripts">
+    const API_BASE = '/api/expense-ledgers';
+    
+    // Load ledgers on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadLedgers();
+        loadStats();
+    });
+    
+    // Load all ledgers
+    async function loadLedgers(filters = {}) {
+        const loadingState = document.getElementById('loadingState');
+        const tableCard = document.getElementById('tableCard');
+        const emptyState = document.getElementById('emptyState');
+        const tbody = document.getElementById('ledgersTableBody');
+        
+        // Show loading
+        loadingState.style.display = 'block';
+        tableCard.style.display = 'none';
+        emptyState.style.display = 'none';
+        
+        try {
+            const response = await fetch(`${API_BASE}`);
+            const ledgers = await response.json();
+            
+            loadingState.style.display = 'none';
+            
+            if (ledgers && ledgers.length > 0) {
+                displayLedgers(ledgers);
+                tableCard.style.display = 'block';
+            } else {
+                emptyState.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error loading ledgers:', error);
+            loadingState.style.display = 'none';
+            emptyState.style.display = 'block';
+        }
+    }
+    
+    // Display ledgers in table
+    function displayLedgers(ledgers) {
+        const tbody = document.getElementById('ledgersTableBody');
+        const countSpan = document.getElementById('ledgerCount');
+        
+        tbody.innerHTML = '';
+        countSpan.textContent = `${ledgers.length} ledger${ledgers.length !== 1 ? 's' : ''}`;
+        
+        ledgers.forEach((ledger, index) => {
+            const row = document.createElement('tr');
+            
+            // Status badge
+            const statusBadge = ledger.isActive 
+                ? '<span class="badge badge-success">Active</span>'
+                : '<span class="badge badge-secondary">Inactive</span>';
+            
+            // Approval status
+            const approvalStatus = ledger.requiresApproval 
+                ? `<span class="badge badge-warning">Required (৳ ${ledger.approvalLimit || 0})</span>`
+                : '<span class="badge badge-info">Not Required</span>';
+            
+            // Alert status
+            const alertStatus = ledger.enableAlerts 
+                ? `<span class="badge badge-warning">Enabled (${ledger.budgetAlertThreshold}%)</span>`
+                : '<span class="badge badge-secondary">Disabled</span>';
+            
+            // Budget utilization bar (simulated)
+            const utilization = Math.random() * 100;
+            let budgetClass = 'budget-low';
+            if (utilization > 80) budgetClass = 'budget-high';
+            else if (utilization > 60) budgetClass = 'budget-medium';
+            
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>
+                    <div class="ledger-name-cell">
+                        <div class="ledger-icon" style="background: ${ledger.colorCode || '#667eea'}; color: white;">
+                            <i class="${ledger.icon || 'fas fa-folder'}"></i>
+                        </div>
+                        <div>
+                            <strong>${ledger.ledgerName}</strong><br>
+                            <small class="text-muted">${ledger.ledgerCode}</small>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="badge badge-info">${ledger.ledgerCategory}</span></td>
+                <td><span class="badge badge-secondary">${ledger.ledgerType}</span></td>
+                <td>
+                    <strong>৳ ${ledger.monthlyBudget || 0}</strong>
+                    <div class="budget-bar">
+                        <div class="budget-fill ${budgetClass}" style="width: ${utilization}%"></div>
+                    </div>
+                    <small class="text-muted">${utilization.toFixed(1)}% utilized</small>
+                </td>
+                <td>${approvalStatus}</td>
+                <td>${alertStatus}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn-icon btn-summary" onclick="viewLedgerSummary(${ledger.id})" title="View Summary">
+                            <i class="fas fa-chart-bar"></i>
+                        </button>
+                        <button class="btn-icon btn-edit" onclick="editLedger(${ledger.id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon btn-delete" onclick="deleteLedger(${ledger.id}, '${ledger.ledgerName}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+    
+    // Load statistics
+    async function loadStats() {
+        try {
+            const response = await fetch(`${API_BASE}`);
+            const ledgers = await response.json();
+            
+            if (ledgers) {
+                document.getElementById('totalLedgers').textContent = ledgers.length;
+                
+                const activeCount = ledgers.filter(l => l.isActive).length;
+                document.getElementById('activeLedgers').textContent = activeCount;
+                
+                const categories = [...new Set(ledgers.map(l => l.ledgerCategory))];
+                document.getElementById('totalCategories').textContent = categories.length;
+            }
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        }
+    }
+    
+    // View ledger summary
+    function viewLedgerSummary(id) {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        
+        const fromDate = formatDate(firstDay);
+        const toDate = formatDate(lastDay);
+        
+        window.location.href = `${API_BASE}/${id}/summary?fromDate=${fromDate}&toDate=${toDate}`;
+    }
+    
+    // Edit ledger
+    function editLedger(id) {
+        window.location.href = `/expense-ledgers/edit/${id}`;
+    }
+    
+    // Delete ledger
+    async function deleteLedger(id, name) {
+        if (!confirm(`Are you sure you want to delete ledger "${name}"?`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${API_BASE}/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                alert('Ledger deleted successfully');
+                loadLedgers();
+                loadStats();
+            } else {
+                alert('Error deleting ledger');
+            }
+        } catch (error) {
+            console.error('Error deleting ledger:', error);
+            alert('Error deleting ledger');
+        }
+    }
+    
+    // Open create form
+    function openCreateForm() {
+        window.location.href = '/expense-ledgers/new';
+    }
+    
+    // Handle filter form submission
+    document.getElementById('filterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const filters = {
+            category: document.getElementById('filterCategory').value,
+            ledgerType: document.getElementById('filterType').value,
+            status: document.getElementById('filterStatus').value,
+            financialYear: document.getElementById('filterFinancialYear').value
+        };
+        
+        // Remove empty values
+        Object.keys(filters).forEach(key => {
+            if (!filters[key]) delete filters[key];
+        });
+        
+        loadLedgers(filters);
+    });
+    
+    // Reset filters
+    function resetFilters() {
+        document.getElementById('filterForm').reset();
+        loadLedgers();
+    }
+    
+    // Format date as YYYY-MM-DD
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+</script>
+</body>
+</html>

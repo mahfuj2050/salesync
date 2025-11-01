@@ -402,9 +402,6 @@
 		<!-- Hidden inputs for backend submission -->
 		<input type="hidden" name="paymentMethod" id="paymentMethodInput">
 		<input type="hidden" name="finAccName" id="finAccNameInput">
-
-
-
         
       </div>
       <div class="modal-footer">
@@ -663,7 +660,6 @@ $(document).on("click", "#confirmPayment", function () {
 
     const paymentMethod = $("#paymentMethodSelect").val();
     const finAccName = $("#finAccSelect").val();
-
     if (!paymentMethod || !finAccName) { alert("Please select both Payment Method and Account!"); return; }
 
     // Fill hidden fields

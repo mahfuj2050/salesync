@@ -18,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -170,37 +171,70 @@ public class SaleController {
 	 * 
 	 */
     
+    
     @GetMapping("/order/details/{id}")
     @ResponseBody
-    public Map<String, Object> getOrderDetails(@PathVariable Long id) {
-        Optional<SalesOrder> orderOpt = orderRepository.findById(id);
-        if (orderOpt.isPresent()) {
+    public ResponseEntity<Map<String, Object>> getOrderDetails(@PathVariable Long id) {
+        try {
+            // Use the new method that ignores deleted flag
+            Optional<SalesOrder> orderOpt = orderRepository.findByIdIgnoreDeleted(id);
+            
+            if (!orderOpt.isPresent()) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Order not found");
+                errorResponse.put("orderId", id);
+                return ResponseEntity.status(404).body(errorResponse);
+            }
+            
             SalesOrder order = orderOpt.get();
             List<OrderDetails> orderDetails = orderDetailsRepository.findAllByOrderId(id);
             
             Map<String, Object> response = new HashMap<>();
             response.put("invoiceNumber", order.getInvoiceNumber());
             response.put("orderDate", order.getDateOrdered().toString());
-            response.put("customerName", order.getCustomer() != null ? order.getCustomer().getName() : "Walk-in Customer");
-            response.put("customerPhone", order.getCustomer() != null ? order.getCustomer().getPhoneNumber() : "");
-            response.put("customerAddress", order.getCustomer() != null ? order.getCustomer().getAddress() : "");
+            
+            // Safe null handling for customer
+            if (order.getCustomer() != null) {
+                response.put("customerName", order.getCustomer().getName());
+                response.put("customerPhone", order.getCustomer().getPhoneNumber() != null ? order.getCustomer().getPhoneNumber() : "");
+                response.put("customerAddress", order.getCustomer().getAddress() != null ? order.getCustomer().getAddress() : "");
+            } else {
+                response.put("customerName", "Walk-in Customer");
+                response.put("customerPhone", "");
+                response.put("customerAddress", "");
+            }
+            
             response.put("amountPaid", order.getAmountPaid());
             response.put("amountDue", order.getAmountDue());
             
-            List<Map<String, Object>> items = orderDetails.stream().map(detail -> {
-                Map<String, Object> item = new HashMap<>();
-                item.put("productName", detail.getProduct().getName());
-                item.put("quantity", detail.getQuantity());
-                item.put("price", detail.getUnitPrice());
-                return item;
-            }).collect(Collectors.toList());
+            // Build items list with null safety
+            List<Map<String, Object>> items = new ArrayList<>();
+            if (orderDetails != null && !orderDetails.isEmpty()) {
+                for (OrderDetails detail : orderDetails) {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("productName", detail.getProduct() != null ? detail.getProduct().getName() : "Unknown Product");
+                    item.put("quantity", detail.getQuantity());
+                    item.put("price", detail.getUnitPrice());
+                    items.add(item);
+                }
+            }
             
             response.put("items", items);
-            return response;
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            System.err.println("Error loading order details for ID: " + id);
+            e.printStackTrace();
+            
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to load order details");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("orderId", id);
+            return ResponseEntity.status(500).body(errorResponse);
         }
-        throw new EntityNotFoundException("Order not found");
     }
-
+    
     @Transactional
     @PostMapping(value = { "/order" })
     @PreAuthorize("hasRole('ROLE_ADMIN')")

@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.business.salesync.models.Customer;
+import com.business.salesync.models.FinancialAccount;
 import com.business.salesync.models.OrderDetails;
 import com.business.salesync.models.Payment;
 import com.business.salesync.models.Product;
@@ -31,6 +32,7 @@ import com.business.salesync.models.SalesOrder;
 import com.business.salesync.models.PurchaseOrder.PaymentStatus;
 import com.business.salesync.repository.CategoryRepository;
 import com.business.salesync.repository.CustomerRepository;
+import com.business.salesync.repository.FinancialAccountRepository;
 import com.business.salesync.repository.OrderRepository;
 import com.business.salesync.repository.PaymentRepository;
 import com.business.salesync.repository.ProductRepository;
@@ -58,6 +60,10 @@ public class PosController {
 
     @Autowired
     private PaymentRepository paymentRepository;
+
+    @Autowired
+    private FinancialAccountRepository financialAccountRepository;
+    
 
     @Autowired
     private PaymentController paymentController;
@@ -484,30 +490,104 @@ public class PosController {
     @ResponseBody
     public ResponseEntity<?> receivePayment(
             @RequestParam Long orderId,
-            @RequestParam BigDecimal amountPaid) {
-
+            @RequestParam BigDecimal amountPaid,
+            @RequestParam(required = false) String paymentMethod, // CASH, MFS, BANK
+            @RequestParam(required = false) String finAccName      // e.g. "Cash at Hand", "bKash-01717...", etc.
+    ) {
         Optional<SalesOrder> optionalOrder = orderRepository.findById(orderId);
-        if (!optionalOrder.isPresent()) {  // ✅ Java 8 compatible
+        if (!optionalOrder.isPresent()) {
             return ResponseEntity.badRequest().body("Order not found");
         }
 
         SalesOrder order = optionalOrder.get();
-        BigDecimal newAmountPaid = order.getAmountPaid() != null
-                ? order.getAmountPaid().add(amountPaid)
-                : amountPaid;
-        BigDecimal newAmountDue = order.getTotalAmount().subtract(newAmountPaid);
+
+        // --- 1️⃣ Update SalesOrder ---
+        BigDecimal newAmountPaid = order.getAmountPaid().add(amountPaid);
+        BigDecimal newAmountDue = order.getGrandTotal().subtract(newAmountPaid);
 
         order.setAmountPaid(newAmountPaid);
         order.setAmountDue(newAmountDue);
+        order.setPaymentStatus(calculatePaymentStatus(newAmountPaid, order.getGrandTotal()));
         orderRepository.save(order);
 
-        // ✅ Use HashMap for Java 8
+        // --- 2️⃣ Create Payment Record ---
+        Payment payment = new Payment();
+        payment.setRefId(order.getId());
+        payment.setRefType(Payment.RefType.SALE_ORDER);
+        payment.setEntityType("Customer");
+        payment.setCustomer(order.getCustomer());
+        payment.setPaidAmount(amountPaid);
+        payment.setAmountPaid(newAmountPaid);
+        payment.setAmountDue(newAmountDue);
+        payment.setPaymentDate(LocalDateTime.now());
+        payment.setPaymentStatus(Payment.PaymentStatus.PAID); // or PARTIALLY_PAID
+        payment.setMethod(paymentMethod);
+        payment.setFromAccount(finAccName);  // ✅ now storing the real account name
+        payment.setGrandTotal(order.getGrandTotal());
+        payment.setTotalAmount(order.getTotalAmount());
+        payment.setDiscount(order.getDiscount());
+        payment.setTotalVat(order.getTotalVat());
+        paymentRepository.save(payment);
+
+        // --- 3️⃣ Update FinancialAccount ---
+        updateFinancialAccountForPayment(order, payment);
+
+        // --- Response ---
         Map<String, BigDecimal> response = new HashMap<>();
         response.put("amountPaid", newAmountPaid);
         response.put("amountDue", newAmountDue);
 
         return ResponseEntity.ok(response);
     }
+
+    // Helper method to determine payment status
+    private SalesOrder.PaymentStatus calculatePaymentStatus(BigDecimal amountPaid, BigDecimal grandTotal) {
+        if (amountPaid.compareTo(grandTotal) >= 0) {
+            return SalesOrder.PaymentStatus.PAID;
+        } else if (amountPaid.compareTo(BigDecimal.ZERO) > 0) {
+            return SalesOrder.PaymentStatus.PARTIALLY_PAID;
+        } else {
+            return SalesOrder.PaymentStatus.PENDING;
+        }
+    }
+
+    // Helper to update FinancialAccount
+    private void updateFinancialAccountForPayment(SalesOrder order, Payment payment) {
+        String accountName = payment.getFromAccount(); // e.g. "Cash at Hand"
+
+        // Find matching account (master)
+        List<FinancialAccount> accounts = financialAccountRepository.findByFinAccNameIgnoreCase(accountName);
+        if (accounts.isEmpty()) {
+            throw new RuntimeException("Financial account not found: " + accountName);
+        }
+
+        FinancialAccount account = accounts.get(0);
+
+        // Create new transaction row (ledger entry)
+        FinancialAccount trn = new FinancialAccount();
+        trn.setFinAccId(account.getFinAccId());
+        trn.setFinAccName(account.getFinAccName());
+        trn.setFinAccType(account.getFinAccType());
+        trn.setTrnDate(LocalDateTime.now());
+        trn.setRefId(order.getId());
+        trn.setTrnRefNo(order.getInvoiceNumber()); // ✅ Save the actual invoice number
+        trn.setRefType("SALE_ORDER");
+        trn.setTransactionType("CASH_IN");
+        trn.setEntityName(order.getCustomer().getName());
+        trn.setEntityType("CUSTOMER");
+        trn.setPaymentMethod(payment.getMethod());
+        trn.setPaymentStatus(payment.getPaymentStatus().name());
+        trn.setCreditAmount(payment.getPaidAmount().doubleValue());
+        trn.setCurrentBalance(account.getCurrentBalance() + payment.getPaidAmount().doubleValue());
+        trn.setBalanceAfterTransaction(account.getCurrentBalance() + payment.getPaidAmount().doubleValue());
+        trn.setRemarks("Payment received for invoice " + order.getInvoiceNumber());
+
+        // Update main account balance
+        account.setCurrentBalance(account.getCurrentBalance() + payment.getPaidAmount().doubleValue());
+        financialAccountRepository.save(account);
+        financialAccountRepository.save(trn);
+    }
+
 
 
 

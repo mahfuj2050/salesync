@@ -5,9 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import com.business.salesync.models.FinancialAccount;
-import com.business.salesync.models.Payment;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,6 +25,12 @@ public interface FinancialAccountRepository extends JpaRepository<FinancialAccou
 
     // Optional: find by account type (CASH, BANK, MOBILE)
     List<FinancialAccount> findByFinAccType(String finAccType);
+    
+    List<FinancialAccount> findByFinAccNameIgnoreCase(String finAccName);
+    
+    @Query("SELECT DISTINCT f FROM FinancialAccount f WHERE f.finAccType = :finAccType")
+    List<FinancialAccount> findByFinAccTypeDistinct(@Param("finAccType") String finAccType);
+
 
     Optional<FinancialAccount> findTopByOrderByIdDesc();
 
@@ -166,9 +170,16 @@ public interface FinancialAccountRepository extends JpaRepository<FinancialAccou
             @Param("refId") Long refId
     );
     
-    @Query("SELECT fa FROM FinancialAccount fa WHERE fa.id IN " +
-    	       "(SELECT MAX(fa2.id) FROM FinancialAccount fa2 GROUP BY fa2.finAccType, fa2.finAccName)")
+    @Query(value = """
+    	    SELECT fa.*
+    	    FROM app_acct_financial_accounts fa
+    	    INNER JOIN (
+    	        SELECT fin_acc_name, MAX(id) as max_id
+    	        FROM app_acct_financial_accounts
+    	        GROUP BY fin_acc_name
+    	    ) latest ON fa.id = latest.max_id
+    	    ORDER BY fa.fin_acc_name ASC
+    	    """, nativeQuery = true)
     	List<FinancialAccount> findLatestBalancePerAccount();
-
 
 }

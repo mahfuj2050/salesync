@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
+  <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}">
   <!-- Bootstrap CSS -->
   <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet" />
  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
@@ -276,10 +276,12 @@
 			     aria-expanded="false">
 			     
 			     <span><i class="fas fa-file-invoice me-2"></i> Expense</span>
-			     <i class="fas fa-chevron-down ms-2"></i> <!-- Arrow at the far right -->
+			     <i class="fas fa-chevron-down ms-2"></i>
 			  </a>
 			  
 			  <ul class="dropdown-menu" aria-labelledby="expenseDropdown">
+			    <!-- Expense Transactions -->
+			    <li class="dropdown-header">Transactions</li>
 			    <li>
 			      <a class="dropdown-item" th:href="@{/expenses/new}">
 			        <i class="fas fa-plus-circle me-1"></i> New Expense
@@ -298,6 +300,48 @@
 			    <li>
 			      <a class="dropdown-item" th:href="@{/expense-return}">
 			        <i class="fas fa-list-alt me-1"></i> Expense Return List
+			      </a>
+			    </li>
+			    
+			    <!-- Divider -->
+			    <li><hr class="dropdown-divider"></li>
+			    
+			    <!-- Expense Ledgers -->
+			    <li class="dropdown-header">Ledger Management</li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-ledgers/new}">
+			        <i class="fas fa-folder-plus me-1"></i> New Ledger
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-ledgers}">
+			        <i class="fas fa-book me-1"></i> All Ledgers
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-ledgers/categories}">
+			        <i class="fas fa-tags me-1"></i> Categories
+			      </a>
+			    </li>
+			    
+			    <!-- Divider -->
+			    <li><hr class="dropdown-divider"></li>
+			    
+			    <!-- Reports -->
+			    <li class="dropdown-header">Reports & Analytics</li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-ledgers/reports/budget-utilization}">
+			        <i class="fas fa-chart-pie me-1"></i> Budget Utilization
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-ledgers/reports/expense-analysis}">
+			        <i class="fas fa-chart-bar me-1"></i> Expense Analysis
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-ledgers/reports/approval-status}">
+			        <i class="fas fa-check-double me-1"></i> Approval Status
 			      </a>
 			    </li>
 			  </ul>

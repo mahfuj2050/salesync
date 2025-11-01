@@ -249,16 +249,15 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     // 🔄 RECURRING EXPENSES
     // ========================================
 
-    /**
-     * Find recurring expenses
-     */
+
+     //Find recurring expenses
+
     @Query("SELECT e FROM Expense e WHERE e.isRecurring = true " +
            "AND e.deleted = false ORDER BY e.nextOccurrenceDate ASC")
     List<Expense> findRecurringExpenses();
 
-    /**
-     * Find recurring expenses due for processing
-     */
+
+     //Find recurring expenses due for processing
     @Query("SELECT e FROM Expense e WHERE e.isRecurring = true " +
            "AND e.nextOccurrenceDate <= :date " +
            "AND e.deleted = false")
@@ -268,9 +267,9 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     // 🔍 SEARCH & FILTER
     // ========================================
 
-    /**
-     * Search expenses by multiple criteria
-     */
+
+    //Search expenses by multiple criteria
+
     @Query("SELECT e FROM Expense e WHERE " +
            "(:vendorName IS NULL OR LOWER(e.vendorName) LIKE LOWER(CONCAT('%', :vendorName, '%'))) AND " +
            "(:category IS NULL OR e.expenseCategory = :category) AND " +
@@ -287,9 +286,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
             @Param("toDate") LocalDate toDate
     );
 
-    /**
-     * Search by description or reference
-     */
+
+     //Search by description or reference
     @Query("SELECT e FROM Expense e WHERE " +
            "(LOWER(e.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(e.referenceNo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
@@ -302,36 +300,33 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     // 📈 ANALYTICS & REPORTS
     // ========================================
 
-    /**
-     * Get top vendors by expense amount
-     */
+
+     //Get top vendors by expense amount
+
     @Query("SELECT e.vendorName, COALESCE(SUM(e.totalAmount), 0) " +
            "FROM Expense e WHERE e.deleted = false " +
            "GROUP BY e.vendorName " +
            "ORDER BY SUM(e.totalAmount) DESC")
     List<Object[]> getTopVendorsByAmount();
 
-    /**
-     * Get expense count by category
-     */
+
+     //Get expense count by category
     @Query("SELECT e.expenseCategory, COUNT(e) FROM Expense e " +
            "WHERE e.deleted = false " +
            "GROUP BY e.expenseCategory " +
            "ORDER BY COUNT(e) DESC")
     List<Object[]> getExpenseCountByCategory();
 
-    /**
-     * Get department-wise expenses
-     */
+
+     //Get department-wise expenses
     @Query("SELECT e.department, COALESCE(SUM(e.totalAmount), 0) " +
            "FROM Expense e WHERE e.deleted = false " +
            "GROUP BY e.department " +
            "ORDER BY SUM(e.totalAmount) DESC")
     List<Object[]> getDepartmentWiseExpenses();
 
-    /**
-     * Get payment method statistics
-     */
+
+     //Get payment method statistics
     @Query("SELECT e.paymentMethod, COUNT(e), COALESCE(SUM(e.totalAmount), 0) " +
            "FROM Expense e WHERE e.deleted = false " +
            "GROUP BY e.paymentMethod")
@@ -341,9 +336,9 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     // 🗑️ SOFT DELETE
     // ========================================
 
-    /**
-     * Soft delete expense
-     */
+
+     //Soft delete expense
+
     @Query("UPDATE Expense e SET e.deleted = true, e.updatedAt = :now, " +
            "e.updatedBy = :updatedBy WHERE e.id = :id")
     void softDelete(
@@ -352,9 +347,9 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
             @Param("updatedBy") String updatedBy
     );
 
-    /**
-     * Find deleted expenses
-     */
+
+     //Find deleted expenses
+
     @Query("SELECT e FROM Expense e WHERE e.deleted = true ORDER BY e.expenseDate DESC")
     List<Expense> findDeletedExpenses();
 
@@ -362,16 +357,14 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     // 📊 DASHBOARD QUERIES
     // ========================================
 
-    /**
-     * Get today's expenses
-     */
+
+     //Get today's expenses
     @Query("SELECT e FROM Expense e WHERE e.expenseDate = :today " +
            "AND e.deleted = false ORDER BY e.createdAt DESC")
     List<Expense> getTodayExpenses(@Param("today") LocalDate today);
 
-    /**
-     * Get this week's expenses
-     */
+
+    //Get this week's expenses
     @Query("SELECT e FROM Expense e WHERE e.expenseDate BETWEEN :startOfWeek AND :endOfWeek " +
            "AND e.deleted = false ORDER BY e.expenseDate DESC")
     List<Expense> getWeekExpenses(
@@ -379,9 +372,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
             @Param("endOfWeek") LocalDate endOfWeek
     );
 
-    /**
-     * Get this month's expenses
-     */
+
+     //Get this month's expenses
     @Query("SELECT e FROM Expense e WHERE " +
            "YEAR(e.expenseDate) = :year AND MONTH(e.expenseDate) = :month " +
            "AND e.deleted = false ORDER BY e.expenseDate DESC")
@@ -390,10 +382,19 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
             @Param("month") int month
     );
 
-    /**
-     * Count expenses by status
-     */
+
+     //Count expenses by status
     @Query("SELECT e.paymentStatus, COUNT(e) FROM Expense e " +
            "WHERE e.deleted = false GROUP BY e.paymentStatus")
     List<Object[]> countExpensesByStatus();
+    
+    //Add this to your ExpenseRepository
+    @Query("SELECT e FROM Expense e WHERE e.ledger.id = :ledgerId " +
+           "AND e.expenseDate BETWEEN :fromDate AND :toDate " +
+           "AND e.deleted = false")
+    List<Expense> findByLedgerAndDateRange(
+        @Param("ledgerId") Long ledgerId,
+        @Param("fromDate") LocalDate fromDate,
+        @Param("toDate") LocalDate toDate
+    );
 }

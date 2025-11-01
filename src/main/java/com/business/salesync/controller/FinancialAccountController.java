@@ -16,8 +16,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.business.salesync.models.FinancialAccount;
 import com.business.salesync.repository.FinancialAccountRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -159,7 +161,13 @@ public class FinancialAccountController {
             default:
                 normalizedType = "CASH";
         }
-
-        return financialAccountRepository.findByFinAccType(normalizedType);
+        //return financialAccountRepository.findByFinAccTypeDistinct(normalizedType);
+        //return financialAccountRepository.findByFinAccType(normalizedType);
+        return financialAccountRepository.findByFinAccType(normalizedType)
+                .stream()
+                .collect(Collectors.collectingAndThen(
+                    Collectors.toMap(FinancialAccount::getFinAccName, fa -> fa, (a, b) -> a),
+                    map -> new ArrayList<>(map.values())
+                ));
     }
 }

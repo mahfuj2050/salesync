@@ -19,6 +19,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -181,6 +183,10 @@ public class Expense {
     // Financial Year
     @Column(name = "financial_year", length = 20)
     private String financialYear; // 2024-2025
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ledger_id")
+    private ExpenseLedger ledger; 
 
     // Soft Delete
     @Column(name = "deleted", nullable = false)

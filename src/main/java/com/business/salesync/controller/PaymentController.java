@@ -37,6 +37,9 @@ public class PaymentController {
             @RequestParam(required = false) String refType,
             @RequestParam(required = false) String paymentStatus,
             Model model) {
+    	
+    	System.out.println("🔍 refType param = " + refType);
+
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
@@ -72,10 +75,14 @@ public class PaymentController {
         //model.addAttribute("totalReceived", paymentRepository.getTotalAmountPaidAll());
         //model.addAttribute("totalDue", paymentRepository.getTotalAmountDueAll());
         
-        model.addAttribute("refType", Payment.RefType.values());
+       // model.addAttribute("refType", Payment.RefType.values());
         model.addAttribute("paymentStatuses", Payment.PaymentStatus.values());
         model.addAttribute("totalReceived", paymentRepository.getTotalAmountPaidAll());
         model.addAttribute("totalDue", paymentRepository.getTotalAmountDueAll());
+        
+     // ✅ Correct: add both separately
+        model.addAttribute("selectedRefType", refType);
+        model.addAttribute("refTypes", Payment.RefType.values());
 
 
         return "fragments/payments";
