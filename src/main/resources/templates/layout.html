@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}">
+  <!-- Bootstrap CSS -->
+  <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet" />
+ <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+  <!-- Font Awesome (Local v7.1.0) -->
+  <link th:href="@{/fontawesome/css/fontawesome.css}" rel="stylesheet" />
+  <link th:href="@{/fontawesome/css/brands.css}" rel="stylesheet" />
+  <link th:href="@{/fontawesome/css/solid.css}" rel="stylesheet" />
+
+  <!-- Custom Styles -->
+  <link th:href="@{/css/styles.css}" rel="stylesheet" />
+
+  <!-- jQuery -->
+  <script th:src="@{/js/jquery-3.6.0.min.js}"></script>
+
+  <!-- Bootstrap Bundle -->
+  <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+
+  <title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE">Sales & Inventory Management System</title>
+
+  <style>
+    body {
+      font-family: "Segoe UI", Roboto, sans-serif;
+      background-color: #f9fafb;
+    }
+
+    header.navbar {
+      background: linear-gradient(90deg, #0d6efd, #0a58ca);
+    }
+
+    #sidebarMenu {
+      min-height: 100vh;
+      border-right: 1px solid #dee2e6;
+      transition: all 0.3s ease-in-out;
+      overflow-y: auto;      /* Enable vertical scrolling */
+      position: sticky;      /* Keep sidebar in place */
+      top: 0;        
+    }
+
+    #sidebarMenu .nav-link {
+      font-weight: 500;
+      color: #333;
+      border-radius: .375rem;
+      margin: 3px 0;
+      padding: 10px 15px;
+      transition: all 0.2s ease;
+    }
+
+    #sidebarMenu .nav-link:hover,
+    #sidebarMenu .nav-link.active {
+      background: #0d6efd;
+      color: #fff;
+    }
+
+    .btn-toggle {
+      font-weight: 600;
+      color: #495057;
+    }
+
+    .btn-toggle:hover {
+      color: #0d6efd;
+    }
+
+    footer {
+      background: #212529;
+      color: #adb5bd;
+      font-size: 0.875rem;
+    }
+
+    footer a {
+      color: #0d6efd;
+      text-decoration: none;
+    }
+    
+    
+    
+    /* Ledger Menu Styles */
+    .ledger-menu {
+        margin: 5px 0;
+    }
+    
+    .ledger-menu .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        margin: 2px 8px;
+    }
+    
+    .ledger-menu .nav-link:hover {
+        background: #f8f9fa;
+        color: #667eea;
+        padding-left: 25px;
+    }
+    
+    .ledger-menu .nav-link i:first-child {
+        width: 24px;
+        margin-right: 12px;
+        font-size: 16px;
+    }
+    
+    .ledger-menu .nav-link .fa-chevron-down {
+        font-size: 12px;
+        transition: transform 0.3s ease;
+    }
+    
+    .ledger-menu .nav-link[aria-expanded="true"] .fa-chevron-down {
+        transform: rotate(180deg);
+    }
+    
+    .ledger-menu .nav-link.collapsed {
+        color: #495057;
+    }
+    
+    .ledger-menu .nav-link.collapsed:hover {
+        color: #667eea;
+    }
+    
+    /* Submenu Styles */
+    .ledger-submenu {
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 5px 8px;
+        padding: 8px 0;
+    }
+    
+    .ledger-submenu .nav-link {
+        padding: 10px 15px 10px 35px;
+        font-size: 14px;
+        color: #6c757d;
+    }
+    
+    .ledger-submenu .nav-link:hover {
+        background: white;
+        color: #667eea;
+        padding-left: 40px;
+    }
+    
+    .ledger-submenu .nav-link i {
+        width: 20px;
+        margin-right: 10px;
+        font-size: 14px;
+    }
+    
+    .ledger-submenu .nav-link.active {
+        background: white;
+        color: #667eea;
+        font-weight: 600;
+    }
+  </style>
+</head>
+
+<body class="d-flex flex-column h-100">
+  <!-- Header -->
+  <header class="navbar navbar-light sticky-top flex-md-nowrap p-2 bg-dark">
+    <a class="navbar-brand px-3 fs-5 fw-bold text-white" th:href="@{/}">
+      <i class="fas fa-cubes me-2"></i> Mubin Enterprise
+    </a>
+
+    <!-- User Profile Dropdown -->
+    <div class="ms-auto me-3">
+      <div class="dropdown">
+        <a class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" href="#"
+          id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-user-circle fs-4 me-2"></i>
+          <span th:text="${#authentication.name}">Username</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+          <li><a class="dropdown-item" th:href="@{/account}"><i class="fas fa-user me-2"></i> Profile</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" th:href="@{/logout}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <nav id="sidebarMenu" class="col-md-2 col-lg-2 d-md-block bg-light sidebar collapse">
+        <div class="position-sticky pt-3">
+          <ul class="nav flex-column">
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/')}" class="nav-link" th:href="@{/}">
+                <i class="fas fa-home me-2"></i> Home
+              </a>
+            
+            <li class="nav-item dropdown">
+			  <a class="nav-link d-flex justify-content-between align-items-center" 
+			     href="#" 
+			     id="salesDropdown" 
+			     role="button" 
+			     data-bs-toggle="dropdown" 
+			     aria-expanded="false">
+			     
+			     <span> <i class="fas fa-shopping-cart me-2"></i>Sales</span>
+			     <i class="fas fa-chevron-down ms-2"></i> <!-- Arrow at the far right -->
+			  </a>
+			  
+			  <ul class="dropdown-menu" aria-labelledby="salesDropdown">
+			    <li>
+			      <a class="dropdown-item" th:href="@{/pos}">
+			        <i class="fas fa-plus-circle me-1"></i> New Sale
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/sales-return/new}">
+			        <i class="fas fa-undo-alt me-1"></i> Sales Return
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/orders}">
+			        <i class="fas fa-list me-1"></i> Sales List
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/sales-return}">
+			        <i class="fas fa-list-alt me-1"></i> Sales Return List
+			      </a>
+			    </li>
+			  </ul>
+			</li>
+			            
+            
+			<li class="nav-item dropdown">
+			  <a class="nav-link d-flex justify-content-between align-items-center" 
+			     href="#" 
+			     id="purchaseDropdown" 
+			     role="button" 
+			     data-bs-toggle="dropdown" 
+			     aria-expanded="false">
+			     
+			     <span><i class="fas fa-file-invoice-dollar me-2"></i> Purchase</span>
+			     <i class="fas fa-chevron-down ms-2"></i> <!-- Arrow at the far right -->
+			  </a>
+			  
+			  <ul class="dropdown-menu" aria-labelledby="purchaseDropdown">
+			    <li>
+			      <a class="dropdown-item" th:href="@{/purchase/new}">
+			        <i class="fas fa-plus-circle me-1"></i> New Purchase
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/purchase-return/new}">
+			        <i class="fas fa-undo-alt me-1"></i> Purchase Return
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/purchase}">
+			        <i class="fas fa-list me-1"></i> Purchase List
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/purchase-return}">
+			        <i class="fas fa-list-alt me-1"></i> Purchase Return List
+			      </a>
+			    </li>
+			  </ul>
+			</li>
+			
+			<li class="nav-item dropdown">
+			  <a class="nav-link d-flex justify-content-between align-items-center" 
+			     href="#" 
+			     id="expenseDropdown" 
+			     role="button" 
+			     data-bs-toggle="dropdown" 
+			     aria-expanded="false">
+			     
+			     <span><i class="fas fa-file-invoice me-2"></i> Expense</span>
+			     <i class="fas fa-chevron-down ms-2"></i>
+			  </a>
+			  
+			  <ul class="dropdown-menu" aria-labelledby="expenseDropdown">
+			    <!-- Expense Transactions -->
+			    <li class="dropdown-header">Transactions</li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expenses/new}">
+			        <i class="fas fa-plus-circle me-1"></i> New Expense
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expenses/return/new}">
+			        <i class="fas fa-undo-alt me-1"></i> Expense Return
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expenses}">
+			        <i class="fas fa-list me-1"></i> Expense List
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-return}">
+			        <i class="fas fa-list-alt me-1"></i> Expense Return List
+			      </a>
+			    </li>
+			    
+			    <!-- Divider -->
+			    <li><hr class="dropdown-divider"></li>
+			    
+			    <!-- Expense Ledgers -->
+			    <li class="dropdown-header">Ledger Management</li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-ledgers/new}">
+			        <i class="fas fa-folder-plus me-1"></i> New Ledger
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-ledgers}">
+			        <i class="fas fa-book me-1"></i> All Ledgers
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-ledgers/categories}">
+			        <i class="fas fa-tags me-1"></i> Categories
+			      </a>
+			    </li>
+			    
+			    <!-- Divider -->
+			    <li><hr class="dropdown-divider"></li>
+			    
+			    <!-- Reports -->
+			    <li class="dropdown-header">Reports & Analytics</li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-ledgers/reports/budget-utilization}">
+			        <i class="fas fa-chart-pie me-1"></i> Budget Utilization
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-ledgers/reports/expense-analysis}">
+			        <i class="fas fa-chart-bar me-1"></i> Expense Analysis
+			      </a>
+			    </li>
+			    <li>
+			      <a class="dropdown-item" th:href="@{/expense-ledgers/reports/approval-status}">
+			        <i class="fas fa-check-double me-1"></i> Approval Status
+			      </a>
+			    </li>
+			  </ul>
+			</li>
+			
+			
+			<!-- Add this to your left sidebar menu -->
+
+		<!-- Ledger Menu (Collapsible) -->
+			<!-- Enhanced Ledger Menu -->
+			<li class="nav-item ledger-menu">
+			    <a class="nav-link collapsed" 
+			       data-bs-toggle="collapse" 
+			       href="#ledgerSubmenu" 
+			       role="button" 
+			       aria-expanded="false" 
+			       aria-controls="ledgerSubmenu">
+			        <i class="fas fa-book"></i>
+			        <span>Ledger</span>
+			        <i class="fas fa-chevron-down ms-auto"></i>
+			    </a>
+			    <div class="collapse ledger-submenu" id="ledgerSubmenu">
+			        <ul class="nav flex-column">
+			            <li class="nav-item">
+			                <a class="nav-link" href="/ledger/customer">
+			                    <i class="fas fa-user-tie"></i>
+			                    <span>Customer Ledger</span>
+			                </a>
+			            </li>
+			            <li class="nav-item">
+			                <a class="nav-link" href="/ledger/supplier">
+			                    <i class="fas fa-truck"></i>
+			                    <span>Supplier Ledger</span>
+			                </a>
+			            </li>
+			        </ul>
+			    </div>
+			</li>
+
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/payments')}" class="nav-link" th:href="@{/payments}">
+                <i class="fas fa-money-bill-wave me-2"></i> Payment
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/accounts/tabs')}" class="nav-link" th:href="@{/accounts/tabs}">
+                <i class="fas fa-money-bill-wave me-2"></i> Accounts
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/products')}" class="nav-link" th:href="@{/products}">
+                <i class="fas fa-box-open me-2"></i> Products
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/categories')}" class="nav-link" th:href="@{/categories}">
+                <i class="fas fa-layer-group me-2"></i> Categories
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/brands')}" class="nav-link" th:href="@{/brands}">
+                <i class="fas fa-tags me-2"></i> Brands
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/customers')}" class="nav-link" th:href="@{/customers}">
+                <i class="fas fa-users me-2"></i> Customers
+              </a>
+            </li>
+            <li>
+              <a th:classappend="${@requestUtil.currentUri('/suppliers')}" class="nav-link" th:href="@{/suppliers}">
+                <i class="fas fa-truck me-2"></i> Suppliers
+              </a>
+            </li>
+
+            <div sec:authorize="hasRole('ADMIN')">
+              <li>
+                <a th:classappend="${@requestUtil.currentUri('/users')}" class="nav-link" th:href="@{/users}">
+                  <i class="fas fa-user-shield me-2"></i> Users
+                </a>
+              </li>
+              <li>
+                <a th:classappend="${@requestUtil.currentUri('/reports')}" class="nav-link" th:href="@{/reports}">
+                  <i class="fas fa-chart-line me-2"></i> Reports
+                </a>
+              </li>
+            </div>
+
+            <li class="border-top my-3"></li>
+
+            <li class="mb-1">
+              <button class="btn btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse"
+                data-bs-target="#account-collapse" aria-expanded="false">
+                <i class="fas fa-user-circle me-2"></i> Account
+              </button>
+              <div class="collapse" id="account-collapse">
+                <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-3">
+                  <li><a class="nav-link link-dark rounded" th:href="@{/account}"> Profile </a></li>
+                  <li><a class="nav-link link-dark rounded" th:href="@{/logout}"> Sign out </a></li>
+                </ul>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- Main -->
+      <main class="col-md-10 ms-sm-auto col-lg-10 px-md-4 py-4">
+        <div class="bg-white shadow-sm rounded p-4">
+          <div layout:fragment="content"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-auto text-center py-3">
+    <div>
+      © 2025 <a href="#">Inventory Management System</a> | Built with <i class="fas fa-heart text-danger"></i>
+    </div>
+  </footer>
+
+  <!-- Child page scripts -->
+  <th:block layout:fragment="scripts"></th:block>
+  
+  <script>
+window.deleteEntity = function(entityType, id) {
+  if (!id || id === 'null' || id === 'undefined') {
+    Swal.fire('Error', 'Invalid ID — cannot delete this record.', 'error');
+    return;
+  }
+
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "This will permanently delete the selected " + entityType + ".",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!'
+  }).then(function(result) {
+    if (result.isConfirmed) {
+      fetch('/api/delete/' + encodeURIComponent(entityType) + '/' + encodeURIComponent(id), { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => {
+          if (data?.status === 'success') {
+            Swal.fire('Deleted!', data.message, 'success').then(() => location.reload());
+          } else if (data?.status === 'blocked') {
+            Swal.fire('Cannot Delete', data.message, 'info');
+          } else {
+            Swal.fire('Error', data?.message || 'Unknown error', 'error');
+          }
+        })
+        .catch(() => Swal.fire('Error', 'Something went wrong!', 'error'));
+    }
+  });
+};
+</script>
+
+  <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+</body>
+</html>

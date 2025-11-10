@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Customer Due Report</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+</head>
+<body>
+<div layout:fragment="content" class="container align-self-center">
+    <h3>Customer Due Report</h3>
+    <p>
+        Period: <strong th:text="${startDate}"></strong> to 
+        <strong th:text="${endDate}"></strong>
+    </p>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+        <tr class="text-center">
+            <th>Invoice #</th>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Grand Total</th>
+            <th>Amount Paid</th>
+            <th>Amount Due</th>
+            <th>Payment Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="order : ${dueOrders}" class="text-center">
+            <td th:text="${order.invoiceNumber}"></td>
+            <td th:text="${order.dateOrdered}"></td>
+            <td th:text="${order.customer.name}"></td>
+            <td th:text="${order.grandTotal}"></td>
+            <td th:text="${order.amountPaid}"></td>
+            <td th:text="${order.amountDue}"></td>
+            <td>
+                <span th:classappend="${order.paymentStatus == 'PAID'} ? 'badge bg-success' : 'badge bg-warning'">
+                    <span th:text="${order.paymentStatus}"></span>
+                </span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

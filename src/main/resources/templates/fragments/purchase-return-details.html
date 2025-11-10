@@ -1,0 +1,49 @@
+<div>
+    <div class="mb-3">
+        <h5 class="fw-bold text-primary">
+            Purchase Return: <span th:text="${purchaseReturn.returnRefNo}">PR-001</span>
+        </h5>
+        <p class="mb-1"><strong>Supplier:</strong> <span th:text="${purchaseReturn.supplier.businessName}">ABC Traders</span></p>
+        <p class="mb-1"><strong>Return Date:</strong> 
+            <span th:text="${#temporals.format(purchaseReturn.returnDate, 'dd-MM-yyyy HH:mm')}">12-10-2025</span>
+        </p>
+        <p class="mb-1"><strong>Remarks:</strong> 
+            <span th:text="${purchaseReturn.remarks != null ? purchaseReturn.remarks : 'N/A'}">Defective items</span>
+        </p>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Product</th>
+                    <th>Quantity Returned</th>
+                    <th>Unit Cost</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item, iStat : ${purchaseReturn.items}">
+                    <td th:text="${iStat.index + 1}">1</td>
+                    <td th:text="${item.product.productName}">Product A</td>
+                    <td th:text="${item.quantityReturned}">5</td>
+                    <td th:text="${#numbers.formatDecimal(item.unitCost, 1, 'POINT', 2, 'NONE')}">200.00</td>
+                    <td th:text="${#numbers.formatDecimal(item.unitCost * item.quantityReturned, 1, 'POINT', 2, 'NONE')}">1000.00</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr class="fw-bold table-light">
+                    <td colspan="4" class="text-end">Total Return Amount</td>
+                    <td th:text="${#numbers.formatDecimal(purchaseReturn.totalReturnAmount, 1, 'POINT', 2, 'NONE')}">1000.00</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="mt-3 text-end">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle"></i> Close
+        </button>
+    </div>
+</div>

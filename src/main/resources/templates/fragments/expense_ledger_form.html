@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:if="${ledger != null and ledger.id != null}">Edit Expense Ledger</title>
+    <title th:unless="${ledger != null and ledger.id != null}">Create Expense Ledger</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .form-container {
+            padding: 20px;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .form-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .form-header h2 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .form-header p {
+            margin: 5px 0;
+            opacity: 0.9;
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .form-section {
+            padding: 30px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .form-section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+        
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        .form-group label.required::after {
+            content: " *";
+            color: #dc3545;
+        }
+        
+        .form-control {
+            padding: 12px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-text {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #28a745;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+        
+        .color-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: 2px solid #dee2e6;
+            margin-left: 10px;
+        }
+        
+        .icon-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            font-size: 18px;
+        }
+        
+        .preview-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+        
+        .budget-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .budget-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .budget-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        
+        .budget-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="form-container">
+        <!-- Header -->
+        <div class="form-header">
+            <h2><i class="fas fa-book"></i> 
+                <span th:if="${ledger != null and ledger.id != null}">Edit Expense Ledger</span>
+                <span th:unless="${ledger != null and ledger.id != null}">Create New Expense Ledger</span>
+            </h2>
+            <p>
+                <span th:if="${ledger != null and ledger.id != null}">Update ledger details and settings</span>
+                <span th:unless="${ledger != null and ledger.id != null}">Define a new expense category with budgets and approval rules</span>
+            </p>
+        </div>
+
+        <form id="ledgerForm" th:action="${(ledger != null and ledger.id != null) ? 
+                                          '/expense-ledgers/' + ledger.id : 
+                                          '/expense-ledgers'}" 
+              method="post">
+              
+            <input type="hidden" th:if="${ledger != null and ledger.id != null}" name="_method" value="put" />
+
+            <!-- Basic Information Section -->
+            <div class="form-card">
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <h3 class="section-title">Basic Information</h3>
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="ledgerCode" class="required">Ledger Code</label>
+                            <input type="text" id="ledgerCode" name="ledgerCode" class="form-control" 
+                                   th:value="${ledger?.ledgerCode}" required
+                                   placeholder="LEDGER-001">
+                            <div class="form-text">Unique identifier for the ledger</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ledgerName" class="required">Ledger Name</label>
+                            <input type="text" id="ledgerName" name="ledgerName" class="form-control" 
+                                   th:value="${ledger?.ledgerName}" required
+                                   placeholder="Office Rent, Electricity Bill, etc.">
+                            <div class="form-text">Descriptive name for the expense category</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ledgerCategory" class="required">Category</label>
+                            <select id="ledgerCategory" name="ledgerCategory" class="form-control" required>
+                                <option value="">Select Category</option>
+                                <option th:each="cat : ${categories}" 
+                                        th:value="${cat}" 
+                                        th:text="${cat}"
+                                        th:selected="${ledger?.ledgerCategory == cat}">
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ledgerType" class="required">Ledger Type</label>
+                            <select id="ledgerType" name="ledgerType" class="form-control" required>
+                                <option value="">Select Type</option>
+                                <option th:each="type : ${ledgerTypes}" 
+                                        th:value="${type}" 
+                                        th:text="${type}"
+                                        th:selected="${ledger?.ledgerType == type}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" class="form-control" rows="3"
+                                  th:text="${ledger?.description}"
+                                  placeholder="Detailed description of this expense ledger..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="parentLedgerId">Parent Ledger</label>
+                        <select id="parentLedgerId" name="parentLedgerId" class="form-control">
+                            <option value="">No Parent (Main Ledger)</option>
+                            <option th:each="parent : ${parentLedgers}" 
+                                    th:value="${parent.id}" 
+                                    th:text="${parent.ledgerName}"
+                                    th:selected="${ledger?.parentLedgerId == parent.id}">
+                            </option>
+                        </select>
+                        <div class="form-text">Select parent ledger if this is a sub-ledger</div>
+                    </div>
+                </div>
+                
+                <!-- Budget Allocation Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <h3 class="section-title">Budget Allocation</h3>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Set budget limits for different time periods. 
+                        Alerts will be triggered when expenses approach these limits.
+                    </div>
+                    
+                    <div class="budget-grid">
+                        <div class="budget-card">
+                            <div class="budget-label">Monthly Budget</div>
+                            <div class="budget-value">
+                                <span th:if="${ledger?.monthlyBudget != null}">৳ <span th:text="${ledger.monthlyBudget}">0.00</span></span>
+                                <span th:unless="${ledger?.monthlyBudget != null}">৳ 0.00</span>
+                            </div>
+                            <input type="number" id="monthlyBudget" name="monthlyBudget" class="form-control" 
+                                   th:value="${ledger?.monthlyBudget}" step="0.01" min="0"
+                                   placeholder="0.00">
+                        </div>
+                        
+                        <div class="budget-card">
+                            <div class="budget-label">Quarterly Budget</div>
+                            <div class="budget-value">
+                                <span th:if="${ledger?.quarterlyBudget != null}">৳ <span th:text="${ledger.quarterlyBudget}">0.00</span></span>
+                                <span th:unless="${ledger?.quarterlyBudget != null}">৳ 0.00</span>
+                            </div>
+                            <input type="number" id="quarterlyBudget" name="quarterlyBudget" class="form-control" 
+                                   th:value="${ledger?.quarterlyBudget}" step="0.01" min="0"
+                                   placeholder="0.00">
+                        </div>
+                        
+                        <div class="budget-card">
+                            <div class="budget-label">Yearly Budget</div>
+                            <div class="budget-value">
+                                <span th:if="${ledger?.yearlyBudget != null}">৳ <span th:text="${ledger.yearlyBudget}">0.00</span></span>
+                                <span th:unless="${ledger?.yearlyBudget != null}">৳ 0.00</span>
+                            </div>
+                            <input type="number" id="yearlyBudget" name="yearlyBudget" class="form-control" 
+                                   th:value="${ledger?.yearlyBudget}" step="0.01" min="0"
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Approval Settings Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-check-double"></i>
+                        </div>
+                        <h3 class="section-title">Approval Settings</h3>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="requiresApproval" name="requiresApproval"
+                                   th:checked="${ledger?.requiresApproval != null ? ledger.requiresApproval : false}">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <label for="requiresApproval">Requires Approval for Expenses</label>
+                    </div>
+                    
+                    <div id="approvalSettings" style="display: none;">
+                        <div class="form-group">
+                            <label for="approvalLimit">Approval Limit</label>
+                            <input type="number" id="approvalLimit" name="approvalLimit" class="form-control" 
+                                   th:value="${ledger?.approvalLimit}" step="0.01" min="0"
+                                   placeholder="0.00">
+                            <div class="form-text">Expenses above this amount will require approval</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Alert Settings Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <h3 class="section-title">Alert Settings</h3>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="enableAlerts" name="enableAlerts"
+                                   th:checked="${ledger?.enableAlerts != null ? ledger.enableAlerts : true}">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <label for="enableAlerts">Enable Budget Alerts</label>
+                    </div>
+                    
+                    <div id="alertSettings">
+                        <div class="form-group">
+                            <label for="budgetAlertThreshold">Alert Threshold (%)</label>
+                            <input type="number" id="budgetAlertThreshold" name="budgetAlertThreshold" class="form-control" 
+                                   th:value="${ledger?.budgetAlertThreshold != null ? ledger.budgetAlertThreshold : 80}" min="1" max="100"
+                                   placeholder="80">
+                            <div class="form-text">Send alerts when budget utilization reaches this percentage</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- UI Customization Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <h3 class="section-title">UI Customization</h3>
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="icon">Icon</label>
+                            <div style="display: flex; align-items: center;">
+                                <input type="text" id="icon" name="icon" class="form-control" 
+                                       th:value="${ledger?.icon}" 
+                                       placeholder="fas fa-folder">
+                                <div class="icon-preview" id="iconPreview">
+                                    <i th:class="${ledger?.icon != null ? ledger.icon : 'fas fa-folder'}"></i>
+                                </div>
+                            </div>
+                            <div class="form-text">FontAwesome icon class (e.g., fas fa-home)</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="colorCode">Color</label>
+                            <div style="display: flex; align-items: center;">
+                                <input type="color" id="colorCode" name="colorCode" class="form-control" 
+                                       th:value="${ledger?.colorCode != null ? ledger.colorCode : '#667eea'}" 
+                                       style="height: 45px; padding: 5px;">
+                                <div class="color-preview" id="colorPreview" 
+                                     th:style="'background: ' + (${ledger?.colorCode} != null ? ${ledger.colorCode} : '#667eea')"></div>
+                            </div>
+                            <div class="form-text">Color code for this ledger in UI</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="displayOrder">Display Order</label>
+                            <input type="number" id="displayOrder" name="displayOrder" class="form-control" 
+                                   th:value="${ledger?.displayOrder}" min="0"
+                                   placeholder="0">
+                            <div class="form-text">Order in which this ledger appears in lists</div>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-container">
+                        <div class="ledger-icon" id="finalPreview" 
+                             th:style="'background: ' + (${ledger?.colorCode} != null ? ${ledger.colorCode} : '#667eea')">
+                            <i th:class="${ledger?.icon != null ? ledger.icon : 'fas fa-folder'}"></i>
+                        </div>
+                        <div>
+                            <strong th:text="${ledger?.ledgerName != null ? ledger.ledgerName : 'Ledger Name'}">Ledger Name</strong><br>
+                            <small class="text-muted" th:text="${ledger?.ledgerCode != null ? ledger.ledgerCode : 'LEDGER-001'}">LEDGER-001</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-toggle-on"></i>
+                        </div>
+                        <h3 class="section-title">Status & Configuration</h3>
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="checkbox-group">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="isActive" name="isActive"
+                                       th:checked="${ledger?.isActive != null ? ledger.isActive : true}">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <label for="isActive">Active</label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="financialYear">Financial Year</label>
+                            <input type="text" id="financialYear" name="financialYear" class="form-control" 
+                                   th:value="${ledger?.financialYear}" 
+                                   placeholder="2024-2025">
+                            <div class="form-text">Financial year this ledger belongs to</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="window.history.back()">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </button>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> 
+                    <span th:if="${ledger != null and ledger.id != null}">Update Ledger</span>
+                    <span th:unless="${ledger != null and ledger.id != null}">Create Ledger</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script layout:fragment="scripts">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle approval settings
+        const approvalCheckbox = document.getElementById('requiresApproval');
+        const approvalSettings = document.getElementById('approvalSettings');
+        
+        function toggleApprovalSettings() {
+            approvalSettings.style.display = approvalCheckbox.checked ? 'block' : 'none';
+        }
+        
+        approvalCheckbox.addEventListener('change', toggleApprovalSettings);
+        // Set initial state based on checkbox
+        toggleApprovalSettings();
+        
+        // Toggle alert settings
+        const alertCheckbox = document.getElementById('enableAlerts');
+        const alertSettings = document.getElementById('alertSettings');
+        
+        function toggleAlertSettings() {
+            alertSettings.style.display = alertCheckbox.checked ? 'block' : 'none';
+        }
+        
+        alertCheckbox.addEventListener('change', toggleAlertSettings);
+        // Set initial state based on checkbox
+        toggleAlertSettings();
+        
+        // Update icon preview
+        const iconInput = document.getElementById('icon');
+        const iconPreview = document.getElementById('iconPreview');
+        const finalPreview = document.getElementById('finalPreview');
+        
+        iconInput.addEventListener('input', function() {
+            const iconClass = this.value || 'fas fa-folder';
+            iconPreview.innerHTML = `<i class="${iconClass}"></i>`;
+            finalPreview.innerHTML = `<i class="${iconClass}"></i>`;
+        });
+        
+        // Update color preview
+        const colorInput = document.getElementById('colorCode');
+        const colorPreview = document.getElementById('colorPreview');
+        
+        colorInput.addEventListener('input', function() {
+            const color = this.value;
+            colorPreview.style.background = color;
+            finalPreview.style.background = color;
+        });
+        
+        // Form validation
+        const form = document.getElementById('ledgerForm');
+        form.addEventListener('submit', function(e) {
+            // Basic validation
+            const ledgerCode = document.getElementById('ledgerCode').value;
+            const ledgerName = document.getElementById('ledgerName').value;
+            const ledgerCategory = document.getElementById('ledgerCategory').value;
+            const ledgerType = document.getElementById('ledgerType').value;
+            
+            if (!ledgerCode || !ledgerName || !ledgerCategory || !ledgerType) {
+                alert('Please fill in all required fields');
+                e.preventDefault();
+                return;
+            }
+        });
+        
+        // Auto-generate ledger code if empty
+        const ledgerCodeInput = document.getElementById('ledgerCode');
+        if (!ledgerCodeInput.value || ledgerCodeInput.value.trim() === '') {
+            ledgerCodeInput.value = 'LEDGER-' + Date.now();
+        }
+    });
+</script>
+</body>
+</html>

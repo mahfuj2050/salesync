@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Invoice - <span th:text="${expense.expenseRefNo}">EXP-001</span></title>
+    
+    <style>
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
+            color: #333;
+            background: #f8f9fa;
+            padding: 20px;
+        }
+        
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        /* Header Section */
+        .invoice-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .company-info h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .company-info .tagline {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .invoice-title {
+            margin-top: 20px;
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+        
+        /* Invoice Meta Section */
+        .invoice-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .meta-section h3 {
+            color: #495057;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .meta-grid {
+            display: grid;
+            gap: 8px;
+        }
+        
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+        
+        .meta-label {
+            font-weight: 500;
+            color: #6c757d;
+        }
+        
+        .meta-value {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-paid { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-partial { background: #cce7ff; color: #004085; }
+        .status-overdue { background: #f8d7da; color: #721c24; }
+        
+        /* Items Table */
+        .items-section {
+            padding: 0;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        .items-table th {
+            background: #f8f9fa;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .items-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        
+        .items-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .item-name {
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .item-description {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        /* Summary Section */
+        .summary-section {
+            padding: 25px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .summary-grid {
+            display: grid;
+            gap: 12px;
+            max-width: 300px;
+            margin-left: auto;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+        
+        .summary-label {
+            color: #6c757d;
+        }
+        
+        .summary-value {
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .summary-total {
+            border-top: 2px solid #dee2e6;
+            padding-top: 12px;
+            margin-top: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        /* Payment Breakdown */
+        .payment-section {
+            padding: 20px 25px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .payment-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+        }
+        
+        .payment-card h4 {
+            font-size: 13px;
+            color: #6c757d;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .payment-amount {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .amount-paid { color: #28a745; }
+        .amount-due { color: #dc3545; }
+        
+        /* Footer */
+        .invoice-footer {
+            padding: 25px;
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .footer-section h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+        
+        .footer-section p {
+            font-size: 13px;
+            opacity: 0.7;
+            line-height: 1.5;
+        }
+        
+        .copyright {
+            font-size: 12px;
+            opacity: 0.6;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .invoice-container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            
+            .no-print {
+                display: none;
+            }
+        }
+        
+        /* Utility Classes */
+        .mt-10 { margin-top: 10px; }
+        .mb-10 { margin-bottom: 10px; }
+        .text-success { color: #28a745; }
+        .text-danger { color: #dc3545; }
+        .text-warning { color: #ffc107; }
+        
+        /* Action Buttons */
+        .action-buttons {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+        
+        .btn-print {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-print:hover {
+            background: #218838;
+        }
+        
+        .btn-download {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-download:hover {
+            background: #138496;
+        }
+        
+        .btn-close {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-close:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <!-- Action Buttons -->
+    <div class="action-buttons no-print">
+        <button class="btn btn-print" onclick="window.print()">
+            🖨️ Print Invoice
+        </button>
+        <button class="btn btn-download" onclick="downloadAsPDF()">
+            📥 Download PDF
+        </button>
+        <button class="btn btn-close" onclick="window.close()">
+            ❌ Close
+        </button>
+    </div>
+
+    <div class="invoice-container">
+        <!-- Header -->
+        <div class="invoice-header">
+            <div class="company-info">
+                <h1>Your Company Name</h1>
+                <p class="tagline">Professional Business Solutions</p>
+            </div>
+            <div class="invoice-title">EXPENSE INVOICE</div>
+        </div>
+
+        <!-- Invoice Meta Information -->
+        <div class="invoice-meta">
+            <div class="meta-section">
+                <h3>Expense Details</h3>
+                <div class="meta-grid">
+                    <div class="meta-row">
+                        <span class="meta-label">Reference No:</span>
+                        <span class="meta-value" th:text="${expense.expenseRefNo}">EXP-20240001</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Expense Date:</span>
+                        <span class="meta-value" th:text="${#temporals.format(expense.expenseDate, 'dd MMMM yyyy')}">01 January 2024</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Category:</span>
+                        <span class="meta-value" th:text="${#strings.capitalizeWords(#strings.replace(expense.expenseCategory.name(), '_', ' '))}">Office Supplies</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Type:</span>
+                        <span class="meta-value" th:text="${expense.expenseType != null ? #strings.capitalizeWords(expense.expenseType.name()) : 'N/A'}">Operational</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="meta-section">
+                <h3>Vendor & Payment</h3>
+                <div class="meta-grid">
+                    <div class="meta-row">
+                        <span class="meta-label">Vendor:</span>
+                        <span class="meta-value" th:text="${expense.vendorName != null ? expense.vendorName : 'N/A'}">Vendor Name</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Contact:</span>
+                        <span class="meta-value" th:text="${expense.vendorContact != null ? expense.vendorContact : 'N/A'}">+1234567890</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Payment Method:</span>
+                        <span class="meta-value" th:text="${expense.paymentMethod != null ? expense.paymentMethod : 'N/A'}">Bank Transfer</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Status:</span>
+                        <span class="meta-value">
+                            <span th:switch="${expense.paymentStatus}" class="status-badge">
+                                <span th:case="PAID" class="status-paid">Paid</span>
+                                <span th:case="PENDING" class="status-pending">Pending</span>
+                                <span th:case="PARTIALLY_PAID" class="status-partial">Partially Paid</span>
+                                <span th:case="OVERDUE" class="status-overdue">Overdue</span>
+                            </span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Items -->
+        <div class="items-section">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th width="5%">#</th>
+                        <th width="35%">Item Description</th>
+                        <th width="10%" class="text-center">Qty</th>
+                        <th width="10%" class="text-center">Unit</th>
+                        <th width="15%" class="text-right">Unit Price</th>
+                        <th width="10%" class="text-right">Tax %</th>
+                        <th width="15%" class="text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item, stat : ${expenseItems}" th:class="${stat.odd} ? 'odd-row' : 'even-row'">
+                        <td class="text-center" th:text="${stat.count}">1</td>
+                        <td>
+                            <div class="item-name" th:text="${item.itemName}">Item Name</div>
+                            <div th:if="${item.description}" class="item-description" th:text="${item.description}">Item description</div>
+                        </td>
+                        <td class="text-center" th:text="${#numbers.formatDecimal(item.quantity, 1, 2)}">1.00</td>
+                        <td class="text-center" th:text="${item.unit != null ? item.unit : 'pcs'}">pcs</td>
+                        <td class="text-right" th:text="'৳ ' + ${#numbers.formatDecimal(item.unitPrice, 1, 2)}">৳ 100.00</td>
+                        <td class="text-right" th:text="${item.taxPercentage != null ? #numbers.formatDecimal(item.taxPercentage, 1, 2) + '%' : '0%'}">15%</td>
+                        <td class="text-right" th:text="'৳ ' + ${#numbers.formatDecimal(item.total, 1, 2)}">৳ 115.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="summary-section">
+            <div class="summary-grid">
+                <div class="summary-row">
+                    <span class="summary-label">Subtotal:</span>
+                    <span class="summary-value" th:text="'৳ ' + ${#numbers.formatDecimal(expense.subtotal, 1, 2)}">৳ 1,000.00</span>
+                </div>
+                <div class="summary-row" th:if="${expense.taxAmount != null && expense.taxAmount > 0}">
+                    <span class="summary-label">Tax Amount:</span>
+                    <span class="summary-value" th:text="'৳ ' + ${#numbers.formatDecimal(expense.taxAmount, 1, 2)}">৳ 150.00</span>
+                </div>
+                <div class="summary-row" th:if="${expense.discount != null && expense.discount > 0}">
+                    <span class="summary-label">Discount:</span>
+                    <span class="summary-value text-success" th:text="'-৳ ' + ${#numbers.formatDecimal(expense.discount, 1, 2)}">-৳ 50.00</span>
+                </div>
+                <div class="summary-row summary-total">
+                    <span class="summary-label">Total Amount:</span>
+                    <span class="summary-value" th:text="'৳ ' + ${#numbers.formatDecimal(expense.totalAmount, 1, 2)}">৳ 1,100.00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Breakdown -->
+        <div class="payment-section">
+            <div class="payment-grid">
+                <div class="payment-card">
+                    <h4>Amount Paid</h4>
+                    <div class="payment-amount amount-paid" th:text="'৳ ' + ${#numbers.formatDecimal(expense.amountPaid, 1, 2)}">৳ 1,100.00</div>
+                </div>
+                <div class="payment-card">
+                    <h4>Amount Due</h4>
+                    <div class="payment-amount amount-due" th:text="'৳ ' + ${#numbers.formatDecimal(expense.amountDue, 1, 2)}">৳ 0.00</div>
+                </div>
+                <div class="payment-card" th:if="${expense.dueDate != null}">
+                    <h4>Due Date</h4>
+                    <div class="payment-amount" th:text="${#temporals.format(expense.dueDate, 'dd MMM yyyy')}">15 Jan 2024</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div th:if="${expense.description != null || expense.remarks != null}" class="summary-section">
+            <div class="meta-grid">
+                <div th:if="${expense.description != null}" class="meta-row">
+                    <span class="meta-label">Description:</span>
+                    <span class="meta-value" th:text="${expense.description}">Expense description</span>
+                </div>
+                <div th:if="${expense.remarks != null}" class="meta-row">
+                    <span class="meta-label">Remarks:</span>
+                    <span class="meta-value" th:text="${expense.remarks}">Additional remarks</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="invoice-footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Company Address</h4>
+                    <p>
+                        123 Business Street<br>
+                        City, State 12345<br>
+                        Country
+                    </p>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact Information</h4>
+                    <p>
+                        Email: info@company.com<br>
+                        Phone: +1 (555) 123-4567<br>
+                        Website: www.company.com
+                    </p>
+                </div>
+                <div class="footer-section">
+                    <h4>Invoice Information</h4>
+                    <p>
+                        Generated on: <span th:text="${currentDate}">January 01, 2024</span><br>
+                        Invoice ID: <span th:text="${expense.expenseRefNo}">EXP-20240001</span><br>
+                        Prepared by: <span th:text="${expense.createdBy != null ? expense.createdBy : 'System'}">Admin</span>
+                    </p>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2024 Your Company Name. All rights reserved. This is an computer-generated document.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // PDF Download functionality
+        function downloadAsPDF() {
+            alert('PDF download functionality would be implemented here.\nThis would typically use a library like jsPDF or make a server call to generate PDF.');
+            // Implementation example:
+            // window.print(); // For now, just trigger print which can save as PDF
+        }
+
+        // Auto-close print dialog after printing
+        window.onafterprint = function() {
+            // Optional: Add any post-print logic here
+        };
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+P for print
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                window.print();
+            }
+            // Escape to close
+            if (e.key === 'Escape') {
+                window.close();
+            }
+        });
+
+        // Add subtle animations
+        document.addEventListener('DOMContentLoaded', function() {
+            const elements = document.querySelectorAll('.invoice-container > *');
+            elements.forEach((el, index) => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    el.style.transition = 'all 0.6s ease';
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+
+        // Enhanced print functionality
+        function enhancePrint() {
+            // Add print-specific classes or modifications
+            document.body.classList.add('printing');
+            window.print();
+            setTimeout(() => {
+                document.body.classList.remove('printing');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

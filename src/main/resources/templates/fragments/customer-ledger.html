@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
+<head>
+    <title>Customer Ledger</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="container-fluid py-3">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Customer Ledger Report</h5>
+            </div>
+            <div class="card-body">
+
+                <!-- Filter Section -->
+                <form id="customerLedgerFilter" class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label for="customerSelect" class="form-label">Customer</label>
+                        <select id="customerSelect" class="form-select">
+                            <option value="">-- Select Customer --</option>
+                            <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.fullName}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="fromDate" class="form-label">From Date</label>
+                        <input type="date" id="fromDate" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="toDate" class="form-label">To Date</label>
+                        <input type="date" id="toDate" class="form-control">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary w-100 btn-filter">Filter</button>
+                    </div>
+                </form>
+                
+      	<!-- Add this above the table -->
+				<div class="mb-3 text-end">
+				    <button id="printSupplierLedgerBtn" class="btn btn-secondary">
+				        🖨️ Print / Export Ledger
+				    </button>
+				</div>
+				          
+
+                <!-- Ledger Table -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Reference No</th>
+                                <th>Description</th>
+                                <th class="text-end">Debit</th>
+                                <th class="text-end">Credit</th>
+                                <th class="text-end">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerLedgerTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Please filter to view records</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                      
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<script th:src="@{/js/jquery-3.6.0.min.js}"></script>
+<script>
+$(document).on('click', '.btn-filter', function() {
+    const customerId = $('#customerSelect').val();
+    const fromDate = $('#fromDate').val();
+    const toDate = $('#toDate').val();
+
+    if (!customerId) {
+        alert('Please select a customer.');
+        return;
+    }
+
+    $.ajax({
+        url: '/ledger/customer',
+        method: 'GET',
+        data: { customerId, fromDate, toDate },
+        success: function(data) {
+            let rows = '';
+            let balance = 0;
+            data.forEach(item => {
+                balance += (item.debit - item.credit);
+                rows += `
+                    <tr>
+                        <td>${item.trnDate}</td>
+                        <td>${item.trnRefNo}</td>
+                        <td>${item.description}</td>
+                        <td class="text-end">${item.debit.toFixed(2)}</td>
+                        <td class="text-end">${item.credit.toFixed(2)}</td>
+                        <td class="text-end">${balance.toFixed(2)}</td>
+                    </tr>`;
+            });
+            $('#customerLedgerTableBody').html(rows);
+        },
+        error: function() {
+            alert('Failed to load customer ledger data.');
+        }
+    });
+});
+
+//Print Supplier Ledger Table
+$(document).on('click', '#printSupplierLedgerBtn', function() {
+    // Clone the ledger table
+    const tableContent = $('#customerLedgerTableBody').closest('table').clone();
+
+    // Open new window for printing
+    const printWindow = window.open('', '', 'height=600,width=900');
+    printWindow.document.write('<html><head><title>Customer Ledger</title>');
+    printWindow.document.write('<link rel="stylesheet" href="/css/bootstrap.min.css">'); // optional styling
+    printWindow.document.write('</head><body>');
+    printWindow.document.write('<h4 class="mb-3">Customer Ledger Report</h4>');
+    printWindow.document.write(tableContent.prop('outerHTML'));
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.print();
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Customer Ledger</title>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .ledger-container {
+            padding: 20px;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .ledger-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .ledger-header h2 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .ledger-header p {
+            margin: 5px 0;
+            opacity: 0.9;
+        }
+        
+        .filter-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn-search {
+            background: #667eea;
+            color: white;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-search:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-reset {
+            background: #6c757d;
+            color: white;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+        
+        .btn-reset:hover {
+            background: #5a6268;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        
+        .summary-card.credit {
+            border-left-color: #28a745;
+        }
+        
+        .summary-card.debit {
+            border-left-color: #dc3545;
+        }
+        
+        .summary-card.balance {
+            border-left-color: #ffc107;
+        }
+        
+        .summary-card h4 {
+            margin: 0 0 10px 0;
+            color: #6c757d;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .summary-card .amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: #212529;
+        }
+        
+        .ledger-table-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .ledger-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .ledger-table thead {
+            background: #f8f9fa;
+        }
+        
+        .ledger-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+        
+        .ledger-table td {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
+        }
+        
+        .ledger-table tbody tr:hover {
+            background: #f8f9fa;
+            transition: background 0.2s;
+        }
+        
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .text-success {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .text-danger {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .btn-view {
+		    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		    color: white;
+		    border: none;
+		    padding: 8px 12px;
+		    border-radius: 6px;
+		    cursor: pointer;
+		    transition: all 0.3s;
+		    font-size: 14px;
+		}
+		
+		.btn-view:hover {
+		    transform: translateY(-2px);
+		    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+		}
+		
+		.btn-view i {
+		    margin-right: 0;
+		}
+		
+		
+		
+				/* Modal Overlay */
+		.modal-overlay {
+		    display: none;
+		    position: fixed;
+		    top: 0;
+		    left: 0;
+		    width: 100%;
+		    height: 100%;
+		    background: rgba(0, 0, 0, 0.7);
+		    z-index: 9999;
+		    overflow-y: auto;
+		    padding: 20px;
+		    animation: fadeIn 0.3s ease;
+		}
+		
+		@keyframes fadeIn {
+		    from { opacity: 0; }
+		    to { opacity: 1; }
+		}
+		
+		/* Modal Container */
+		.modal-container {
+		    background: white;
+		    max-width: 900px;
+		    margin: 40px auto;
+		    border-radius: 16px;
+		    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+		    animation: slideUp 0.3s ease;
+		}
+		
+		@keyframes slideUp {
+		    from {
+		        transform: translateY(50px);
+		        opacity: 0;
+		    }
+		    to {
+		        transform: translateY(0);
+		        opacity: 1;
+		    }
+		}
+		
+		/* Modal Header */
+		.modal-header {
+		    padding: 25px 30px;
+		    border-bottom: 2px solid #f0f0f0;
+		    display: flex;
+		    justify-content: space-between;
+		    align-items: center;
+		    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+		    border-radius: 16px 16px 0 0;
+		}
+		
+		.modal-header h2 {
+		    margin: 0;
+		    font-size: 24px;
+		    color: #2c3e50;
+		    display: flex;
+		    align-items: center;
+		    gap: 10px;
+		}
+		
+		.modal-close {
+		    background: #e74c3c;
+		    color: white;
+		    border: none;
+		    width: 36px;
+		    height: 36px;
+		    border-radius: 50%;
+		    cursor: pointer;
+		    transition: all 0.3s;
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		}
+		
+		.modal-close:hover {
+		    background: #c0392b;
+		    transform: rotate(90deg);
+		}
+		
+		/* Modal Body */
+		.modal-body {
+		    padding: 30px;
+		    max-height: 70vh;
+		    overflow-y: auto;
+		}
+		
+		/* Modal Header Section */
+		.modal-header-section {
+		    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		    color: white;
+		    padding: 25px;
+		    border-radius: 12px;
+		    margin-bottom: 25px;
+		}
+		
+		.modal-title-group {
+		    display: flex;
+		    justify-content: space-between;
+		    align-items: center;
+		    margin-bottom: 10px;
+		}
+		
+		.modal-title-group h2 {
+		    margin: 0;
+		    font-size: 26px;
+		}
+		
+		.modal-ref-number {
+		    margin: 0;
+		    opacity: 0.9;
+		    font-size: 14px;
+		}
+		
+		/* Details Grid */
+		.details-grid {
+		    display: grid;
+		    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		    gap: 15px;
+		    margin-bottom: 25px;
+		}
+		
+		.detail-card {
+		    background: #f8f9fa;
+		    padding: 20px;
+		    border-radius: 10px;
+		    display: flex;
+		    gap: 15px;
+		    align-items: center;
+		    transition: all 0.3s;
+		}
+		
+		.detail-card:hover {
+		    transform: translateY(-3px);
+		    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		}
+		
+		.detail-icon {
+		    width: 50px;
+		    height: 50px;
+		    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		    color: white;
+		    border-radius: 12px;
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		    font-size: 20px;
+		}
+		
+		.detail-content {
+		    display: flex;
+		    flex-direction: column;
+		}
+		
+		.detail-label {
+		    font-size: 12px;
+		    color: #6c757d;
+		    text-transform: uppercase;
+		    font-weight: 600;
+		    margin-bottom: 5px;
+		}
+		
+		.detail-value {
+		    font-size: 16px;
+		    color: #2c3e50;
+		    font-weight: 600;
+		}
+		
+		/* Financial Summary */
+		.financial-summary {
+		    background: #f8f9fa;
+		    padding: 25px;
+		    border-radius: 12px;
+		    margin-bottom: 25px;
+		}
+		
+		.financial-summary h3 {
+		    margin: 0 0 20px 0;
+		    font-size: 18px;
+		    color: #2c3e50;
+		}
+		
+		.financial-grid {
+		    display: grid;
+		    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		    gap: 15px;
+		}
+		
+		.financial-item {
+		    background: white;
+		    padding: 20px;
+		    border-radius: 10px;
+		    border-left: 4px solid #667eea;
+		}
+		
+		.financial-item.highlight {
+		    border-left-color: #f5576c;
+		    background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+		}
+		
+		.financial-label {
+		    display: block;
+		    font-size: 13px;
+		    color: #6c757d;
+		    margin-bottom: 8px;
+		    font-weight: 600;
+		}
+		
+		.financial-value {
+		    display: block;
+		    font-size: 24px;
+		    font-weight: 700;
+		    color: #2c3e50;
+		}
+		
+		.financial-value.debit {
+		    color: #28a745;
+		}
+		
+		.financial-value.credit {
+		    color: #dc3545;
+		}
+		
+		/* Remarks Section */
+		.remarks-section {
+		    background: #fff3cd;
+		    padding: 20px;
+		    border-radius: 10px;
+		    margin-bottom: 25px;
+		    border-left: 4px solid #ffc107;
+		}
+		
+		.remarks-section h3 {
+		    margin: 0 0 10px 0;
+		    font-size: 16px;
+		    color: #856404;
+		}
+		
+		.remarks-section p {
+		    margin: 0;
+		    color: #856404;
+		    line-height: 1.6;
+		}
+		
+		/* Related Transactions */
+		.related-transactions {
+		    margin-bottom: 25px;
+		}
+		
+		.related-transactions h3 {
+		    margin: 0 0 15px 0;
+		    font-size: 18px;
+		    color: #2c3e50;
+		}
+		
+		.related-list {
+		    display: flex;
+		    flex-direction: column;
+		    gap: 10px;
+		}
+		
+		.related-item {
+		    background: #f8f9fa;
+		    padding: 15px;
+		    border-radius: 8px;
+		    display: flex;
+		    justify-content: space-between;
+		    align-items: center;
+		    transition: all 0.3s;
+		}
+		
+		.related-item:hover {
+		    background: #e9ecef;
+		}
+		
+		.related-info {
+		    display: flex;
+		    flex-direction: column;
+		    gap: 5px;
+		}
+		
+		.related-ref {
+		    font-weight: 600;
+		    color: #2c3e50;
+		}
+		
+		.related-date {
+		    font-size: 13px;
+		    color: #6c757d;
+		}
+		
+		.related-amount {
+		    font-size: 16px;
+		    font-weight: 700;
+		}
+		
+		/* Metadata Section */
+		.metadata-section {
+		    background: #e9ecef;
+		    padding: 15px 20px;
+		    border-radius: 10px;
+		    display: flex;
+		    justify-content: space-around;
+		    gap: 20px;
+		}
+		
+		.metadata-item {
+		    display: flex;
+		    align-items: center;
+		    gap: 10px;
+		    color: #495057;
+		    font-size: 14px;
+		}
+		
+		.metadata-item i {
+		    color: #667eea;
+		}
+		
+		/* Modal Footer */
+		.modal-footer {
+		    padding: 20px 30px;
+		    border-top: 2px solid #f0f0f0;
+		    display: flex;
+		    justify-content: flex-end;
+		    gap: 10px;
+		    background: #f8f9fa;
+		    border-radius: 0 0 16px 16px;
+		}
+		
+		.btn-primary, .btn-secondary {
+		    padding: 12px 24px;
+		    border: none;
+		    border-radius: 8px;
+		    cursor: pointer;
+		    font-weight: 600;
+		    transition: all 0.3s;
+		    display: flex;
+		    align-items: center;
+		    gap: 8px;
+		}
+		
+		.btn-primary {
+		    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		    color: white;
+		}
+		
+		.btn-primary:hover {
+		    transform: translateY(-2px);
+		    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+		}
+		
+		.btn-secondary {
+		    background: #6c757d;
+		    color: white;
+		}
+		
+		.btn-secondary:hover {
+		    background: #5a6268;
+		}
+		
+		/* Loading State */
+		.modal-loading {
+		    text-align: center;
+		    padding: 60px 20px;
+		    color: #667eea;
+		}
+		
+		.modal-loading .spinner {
+		    margin: 0 auto 20px;
+		}
+		
+		/* Error State */
+		.modal-error {
+		    text-align: center;
+		    padding: 60px 20px;
+		    color: #dc3545;
+		}
+		
+		.modal-error i {
+		    font-size: 64px;
+		    margin-bottom: 20px;
+		}
+		
+		/* Responsive */
+		@media (max-width: 768px) {
+		    .modal-container {
+		        margin: 20px auto;
+		    }
+		    
+		    .details-grid {
+		        grid-template-columns: 1fr;
+		    }
+		    
+		    .financial-grid {
+		        grid-template-columns: 1fr;
+		    }
+		    
+		    .metadata-section {
+		        flex-direction: column;
+		    }
+		}
+		
+		
+		
+		
+		
+		        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #17a2b8;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --border: #e0e0e0;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-icon {
+            font-size: 28px;
+            color: var(--secondary);
+            margin-right: 10px;
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        
+        .page-subtitle {
+            font-size: 16px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 18px 25px;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .supplier-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .balance-highlight {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .balance-amount {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--light);
+            border-radius: 8px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 180px;
+        }
+        
+        .filter-label {
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .filter-select, .filter-input {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--secondary);
+            color: var(--secondary);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-icon {
+            margin-right: 8px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background-color: #f1f5f9;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        .status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            display: inline-block;
+        }
+        
+        .status-paid {
+            background-color: rgba(39, 174, 96, 0.15);
+            color: var(--success);
+        }
+        
+        .status-pending {
+            background-color: rgba(243, 156, 18, 0.15);
+            color: var(--warning);
+        }
+        
+        .status-overdue {
+            background-color: rgba(231, 76, 60, 0.15);
+            color: var(--danger);
+        }
+        
+        .amount {
+            font-weight: 600;
+            text-align: right;
+        }
+        
+        .debit {
+            color: var(--danger);
+        }
+        
+        .credit {
+            color: var(--success);
+        }
+        
+        .transaction-type {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .cash-in {
+            background-color: rgba(39, 174, 96, 0.15);
+            color: var(--success);
+        }
+        
+        .cash-out {
+            background-color: rgba(231, 76, 60, 0.15);
+            color: var(--danger);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .pagination-info {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .supplier-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+            }
+            
+            th, td {
+                padding: 8px 5px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="ledger-container">
+        <!-- Header -->
+        <div class="ledger-header">
+            <h2>📊 Customer Ledger</h2>
+            <p>View and track all customer transactions and receivables</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-card">
+            <form id="filterForm">
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label for="customerName">Customer Name</label>
+                        <input type="text" 
+                               id="customerName" 
+                               name="name" 
+                               class="form-control" 
+                               placeholder="Search customer...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="fromDate">From Date</label>
+                        <input type="datetime-local" 
+                               id="fromDate" 
+                               name="fromDate" 
+                               class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="toDate">To Date</label>
+                        <input type="datetime-local" 
+                               id="toDate" 
+                               name="toDate" 
+                               class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <div>
+                            <button type="submit" class="btn-search">🔍 Search</button>
+                            <button type="button" class="btn-reset" onclick="resetFilters()">🔄 Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading ledger data...</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div id="summarySection" style="display: none;">
+            <div class="summary-cards">
+                <div class="summary-card credit">
+                    <h4>Total Credit (Received)</h4>
+                    <div class="amount" id="totalCredit">৳ 0.00</div>
+                </div>
+                
+                <div class="summary-card debit">
+                    <h4>Total Debit (Invoiced)</h4>
+                    <div class="amount" id="totalDebit">৳ 0.00</div>
+                </div>
+                
+                <div class="summary-card balance">
+                    <h4>Net Receivable</h4>
+                    <div class="amount" id="netBalance">৳ 0.00</div>
+                </div>
+                
+                <div class="summary-card">
+                    <h4>Total Transactions</h4>
+                    <div class="amount" id="totalTransactions">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="ledger-table-card">
+            <div class="table-responsive">
+                <table class="ledger-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Date</th>
+                            <th>Ref. No</th>
+                            <th>Customer</th>
+                            <th>Type</th>
+                            <th>Payment Method</th>
+                            <th>Debit</th>
+                            <th>Credit</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgerTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <i>📭</i>
+            <h3>No Transactions Found</h3>
+            <p>Try adjusting your filters or check back later</p>
+        </div>
+        
+        <!-- Customer Ledger Details Modal -->
+		<div id="detailsModal" class="modal-overlay">
+		    <div class="modal-container" style="max-width: 95%; width: 1400px;">
+		        <div class="modal-header">
+		            <h2><i class="fas fa-file-invoice"></i> Customer Ledger Details</h2>
+		            <button class="modal-close" onclick="closeModal()">
+		                <i class="fas fa-times"></i>
+		            </button>
+		        </div>
+		        <div class="modal-body" id="modalDetailsBody" style="padding: 0; max-height: 85vh;">
+		            <!-- Content will be loaded dynamically via iframe -->
+		        </div>
+		    </div>
+		</div>
+		        
+        
+    </div>
+</div>
+
+<script layout:fragment="scripts">
+    const API_BASE = '/api/ledger';
+    
+    // Load customer names for autocomplete
+    async function loadCustomerNames() {
+        try {
+            const response = await fetch(`${API_BASE}/customers/names`);
+            const data = await response.json();
+            
+            if (data.success && data.customers.length > 0) {
+                const input = document.getElementById('customerName');
+                const datalist = document.createElement('datalist');
+                datalist.id = 'customerList';
+                
+                data.customers.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    datalist.appendChild(option);
+                });
+                
+                input.setAttribute('list', 'customerList');
+                document.body.appendChild(datalist);
+            }
+        } catch (error) {
+            console.error('Error loading customer names:', error);
+        }
+    }
+    
+    // Load ledger data
+    async function loadLedger(name = null, fromDate = null, toDate = null) {
+        const loadingState = document.getElementById('loadingState');
+        const summarySection = document.getElementById('summarySection');
+        const emptyState = document.getElementById('emptyState');
+        const tableBody = document.getElementById('ledgerTableBody');
+        
+        // Show loading
+        loadingState.style.display = 'block';
+        summarySection.style.display = 'none';
+        emptyState.style.display = 'none';
+        tableBody.innerHTML = '';
+        
+        try {
+            let url = `${API_BASE}/customer`;
+            
+            // Build URL with filters
+            if (fromDate || toDate) {
+                url = `${API_BASE}/customer/date-range`;
+            }
+            
+            const params = new URLSearchParams();
+            if (name) params.append('name', name);
+            if (fromDate) params.append('fromDate', fromDate);
+            if (toDate) params.append('toDate', toDate);
+            
+            if (params.toString()) {
+                url += '?' + params.toString();
+            }
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            loadingState.style.display = 'none';
+            
+            if (data.success && data.transactions && data.transactions.length > 0) {
+                displaySummary(data);
+                displayTransactions(data.transactions);
+                summarySection.style.display = 'block';
+            } else {
+                emptyState.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error loading ledger:', error);
+            loadingState.style.display = 'none';
+            emptyState.style.display = 'block';
+            alert('Error loading ledger data. Please try again.');
+        }
+    }
+    
+    // Display summary cards
+    function displaySummary(data) {
+        document.getElementById('totalCredit').textContent = 
+            `৳ ${data.totalCredit.toFixed(2)}`;
+        document.getElementById('totalDebit').textContent = 
+            `৳ ${data.totalDebit.toFixed(2)}`;
+        document.getElementById('netBalance').textContent = 
+            `৳ ${data.netBalance.toFixed(2)}`;
+        document.getElementById('totalTransactions').textContent = 
+            data.totalTransactions;
+    }
+    
+    // Display transactions in table
+    function displayTransactions(transactions) {
+        const tbody = document.getElementById('ledgerTableBody');
+        tbody.innerHTML = '';
+        
+        transactions.forEach((trx, index) => {
+            const row = document.createElement('tr');
+            
+            // Format date
+            const date = new Date(trx.trnDate);
+            const formattedDate = date.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            // Status badge
+            let statusBadge = '';
+            if (trx.paymentStatus === 'PAID') {
+                statusBadge = '<span class="badge badge-success">PAID</span>';
+            } else if (trx.paymentStatus === 'PARTIALLY_PAID') {
+                statusBadge = '<span class="badge badge-warning">PARTIAL</span>';
+            } else if (trx.paymentStatus === 'PENDING') {
+                statusBadge = '<span class="badge badge-danger">PENDING</span>';
+            }
+            
+            // Type badge
+            let typeBadge = '';
+            if (trx.refType === 'SALE_ORDER') {
+                typeBadge = '<span class="badge badge-info">SALE</span>';
+            } else if (trx.refType === 'PAYMENT') {
+                typeBadge = '<span class="badge badge-success">PAYMENT</span>';
+            }
+            
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${formattedDate}</td>
+                <td><strong>${trx.trnRefNo || '-'}</strong></td>
+                <td>${trx.entityName}</td>
+                <td>${typeBadge}</td>
+                <td>${trx.paymentMethod || '-'}</td>
+                <td class="text-danger">${trx.debitAmount > 0 ? '৳ ' + trx.debitAmount.toFixed(2) : '-'}</td>
+                <td class="text-success">${trx.creditAmount > 0 ? '৳ ' + trx.creditAmount.toFixed(2) : '-'}</td>
+                <td><strong>৳ ${trx.balanceAfterTrn.toFixed(2)}</strong></td>
+                <td>${statusBadge}</td>
+                <td><small>${trx.remarks || '-'}</small></td>
+                <td>
+                <button class="btn-view" onclick="viewTransactionDetails(${trx.id}, '${trx.entityName}', '${trx.entityType}')" title="View Details">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+    
+    // Handle form submission
+    document.getElementById('filterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('customerName').value;
+        const fromDate = document.getElementById('fromDate').value;
+        const toDate = document.getElementById('toDate').value;
+        
+        loadLedger(name, fromDate, toDate);
+    });
+    
+    // Reset filters
+    function resetFilters() {
+        document.getElementById('filterForm').reset();
+        loadLedger();
+    }
+    
+    // Load data on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCustomerNames();
+        loadLedger();
+    });
+    
+ // Handle "View" button click
+ // View transaction details in modal
+function viewTransactionDetails(transactionId, entityName, entityType) {
+    // Fix the URL path to match controller mapping
+    const url = `/api/ledger/customer/details?name=${encodeURIComponent(entityName)}`;
+        // Open in modal iframe
+        showLedgerInModal(url);
+    }
+
+    // Show ledger details in modal with iframe
+    function showLedgerInModal(url) {
+        const modal = document.getElementById('detailsModal');
+        const modalBody = document.getElementById('modalDetailsBody');
+    	 
+    	 if (!modal || !modalBody) {
+    	        console.error('Modal or modal body not found in DOM!');
+    	        return;
+    	    }
+        
+        // Show modal
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        
+        // Show loading indicator
+        modalBody.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 200px;">
+                <div style="text-align: center;">
+                    <div class="spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #f5576c; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                    <p class="mt-2">Loading ledger details...</p>
+                </div>
+            </div>
+        `;
+        
+        // Create iframe
+        const iframe = document.createElement('iframe');
+        iframe.style.width = '100%';
+        iframe.style.height = '80vh';
+        iframe.style.border = 'none';
+        iframe.style.borderRadius = '8px';
+        iframe.style.opacity = '0';
+        iframe.style.transition = 'opacity 0.3s';
+        
+        // Handle iframe load event
+        iframe.onload = function() {
+            // Fade in the iframe
+            setTimeout(() => {
+                iframe.style.opacity = '1';
+            }, 100);
+        };
+        
+        // Handle iframe error
+        iframe.onerror = function() {
+            modalBody.innerHTML = `
+                <div style="display: flex; justify-content: center; align-items: center; height: 200px; flex-direction: column;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #e74c3c; margin-bottom: 20px;"></i>
+                    <p>Error loading ledger details. Please try again.</p>
+                    <button class="btn btn-primary" onclick="closeModal()" style="margin-top: 20px;">Close</button>
+                </div>
+            `;
+        };
+        
+        // Set iframe source and append to modal body
+        setTimeout(() => {
+            iframe.src = url;
+            modalBody.innerHTML = '';
+            modalBody.appendChild(iframe);
+        }, 500);
+    }
+
+    // Close modal
+    function closeModal() {
+        const modal = document.getElementById('detailsModal');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('detailsModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+
+</script>
+</body>
+</html>

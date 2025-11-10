@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>IMS - Login</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome -->
+  <link href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" rel="stylesheet">
+  <link th:href="@{/styles.css}" rel="stylesheet" />
+</head>
+
+<body class="d-flex flex-column min-vh-100 bg-light">
+
+  <!-- Header -->
+  <header class="navbar navbar-dark sticky-top bg-dark shadow">
+    <a class="navbar-brand mx-auto fw-bold" th:href="@{/}">NEXUS Sales and Inventory Management System</a>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container d-flex justify-content-center align-items-center flex-grow-1">
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-body p-4">
+          <h4 class="card-title text-center mb-3">Welcome Back 👋</h4>
+          <p class="text-center text-muted small mb-4">Login to continue to Inventory Management System</p>
+
+          <!-- Login Form -->
+          <form th:action="@{/login}" th:object="${user}" method="post">
+            <!-- Username -->
+            <div class="mb-3">
+              <label for="username" class="form-label">Username</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                <input type="text" class="form-control" id="username" placeholder="Enter your username"
+                       th:field="*{username}" th:errorclass="is-invalid">
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+              </div>
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input type="password" class="form-control" id="password" placeholder="Enter your password"
+                       th:field="*{password}" th:errorclass="is-invalid">
+                <span class="input-group-text">
+                  <i class="fas fa-eye-slash" id="togglePassword" style="cursor:pointer;"></i>
+                </span>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+              </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">Log in</button>
+            </div>
+          </form>
+
+          <!-- Extra -->
+          <div class="text-center mt-3">
+            <a href="#" class="small">Forgot password?</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center text-muted py-3 small">
+    &copy; 2025 IMS. All Rights Reserved.
+  </footer>
+
+  <!-- Bootstrap & jQuery -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- Toggle Password Script -->
+  <script>
+    $(document).ready(function() {
+      $("#togglePassword").on("click", function() {
+        const passwordField = $("#password");
+        const type = passwordField.attr("type") === "password" ? "text" : "password";
+        passwordField.attr("type", type);
+
+        // toggle icon
+        $(this).toggleClass("fa-eye fa-eye-slash");
+      });
+    });
+  </script>
+</body>
+</html>
